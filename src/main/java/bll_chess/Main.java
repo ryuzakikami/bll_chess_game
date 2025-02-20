@@ -13,10 +13,10 @@ public class Main {
         window.setVisible(true);     
  
         try {
-            // 1. e4
-            gamePanel.processMove(1, 4, 3, 4); // e2 -> e4
+       
+            gamePanel.processMove(1, 4, 3, 4); 
             Thread.sleep(1000);
-            gamePanel.processMove(6, 3, 4, 3); // e2 -> e4
+            gamePanel.processMove(6, 3, 4, 3); 
             Thread.sleep(1000);
             gamePanel.processMove(3, 4, 4, 4);
             Thread.sleep(1000);
