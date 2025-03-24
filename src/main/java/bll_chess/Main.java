@@ -1,45 +1,44 @@
 package main.java.bll_chess;
-
 import javax.swing.JFrame;
+
+import main.java.bll_chess.piece.Sound;
 public class Main {
     public static void main(String[] args) {
-        JFrame window = new JFrame("Schachbrett");
-        GamePanel gamePanel = new GamePanel();
-        window.add(gamePanel);
-        window.pack();
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setResizable(false);
-        window.setLocationRelativeTo(null); 
-        window.setVisible(true);     
- 
+        JFrame frame = new JFrame("Schachbrett");
+        GamePanel panel = new GamePanel();
+        
+        frame.add(panel);
+        frame.pack();
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        Thread gameThread = new Thread(panel);
+        gameThread.start();
+
         try {
        
-            gamePanel.processMove(1, 4, 3, 4); 
+            panel.processMove(6, 3, 4, 3);
+            Thread.sleep(1000);   
+            panel.processMove(1, 4, 3, 4);
             Thread.sleep(1000);
-            gamePanel.processMove(6, 3, 4, 3); 
+            panel.processMove(7, 3, 5, 3);
             Thread.sleep(1000);
-            gamePanel.processMove(3, 4, 4, 4);
+            panel.processMove(3, 4, 4, 3);
             Thread.sleep(1000);
-            gamePanel.processMove(4, 3, 3, 3);
+            panel.processMove(7, 2, 6, 3);
             Thread.sleep(1000);
-            gamePanel.processMove(4, 4, 5, 4);
+            panel.processMove(0, 4, 1, 4);
             Thread.sleep(1000);
-            gamePanel.processMove(3, 3, 2, 3);
+            panel.processMove(7, 1, 5, 2);
             Thread.sleep(1000);
-            gamePanel.processMove(5, 4, 6, 5);
+            panel.processMove(4, 3, 5, 2);
             Thread.sleep(1000);
-            gamePanel.processMove(7, 4, 6, 3);
+            panel.processMove(7, 4, 7, 2);
             Thread.sleep(1000);
-            gamePanel.processMove(6, 5, 7, 6);
            
-
-
-
-        } catch (Exception e) {
+            } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        
-      
- }
+    }
 }
-

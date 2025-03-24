@@ -11,7 +11,7 @@ public abstract class Piece {
     protected int col;   // Spalte
     protected int row;   // Zeile
 
-    // Zusätzliche Felder für die Animation
+    // Zusätzliche Felder für Animation
     protected int animOffsetX = 0;
     protected int animOffsetY = 0;
 
@@ -22,10 +22,8 @@ public abstract class Piece {
         this.image = loadImage(getImagePath());
     }
 
-    // Abstrakte Methode, um den spezifischen Pfad zum Bild zu erhalten
     protected abstract String getImagePath();
 
-    // Bild laden mit festem Pfad
     protected BufferedImage loadImage(String imgPath) {
         BufferedImage img = null;
         String fullPath = "src/main/resources/pieces/" + imgPath + ".png";
@@ -39,33 +37,45 @@ public abstract class Piece {
         } else {
             System.err.println("Bild nicht gefunden: " + fullPath);
         }
-                return img;
+        return img;
     }  
-        
-        
 
-    // Getter für das Bild
+    // Anpassung des Sounds auf die Sound-Klasse
+    public void playMoveSound() {
+        // Nutze die Sound-Klasse und rufe den entsprechenden Sound ab
+        if (color == 0) {  // Weiß
+            Sound.play(Sound.SoundType.WHITE_MOVE);
+        } else {  // Schwarz
+            Sound.play(Sound.SoundType.BLACK_MOVE);
+        }
+    }
+
+    public void playCaptureSound() {
+        // Nutze die Sound-Klasse und rufe den entsprechenden Sound ab
+        if (color == 0) {  // Weiß
+            Sound.play(Sound.SoundType.WHITE_TAKES);
+        } else {  // Schwarz
+            Sound.play(Sound.SoundType.BLACK_CAPTURES);
+        }
+    }
+
     public BufferedImage getImage() {
         return image;
     }
 
-    // Berechnet die x-Position unter Berücksichtigung des Animations-Offsets
     public int getX(int squareSize) {
         return col * squareSize + animOffsetX;
     }
 
-    // Berechnet die y-Position unter Berücksichtigung des Animations-Offsets
     public int getY(int squareSize) {
         return row * squareSize + animOffsetY;
     }
 
-    // Setter für den Animations-Offset
     public void setAnimOffset(int offsetX, int offsetY) {
         this.animOffsetX = offsetX;
         this.animOffsetY = offsetY;
     }
 
-    // Getter und Setter für Spalte und Zeile
     public int getCol() {
         return col;
     }
@@ -85,15 +95,12 @@ public abstract class Piece {
         this.color = color;
     }
 
-    // Prüft, ob ein Zug auf ein Ziel möglich ist (wird in Subklassen überschrieben)
     public abstract boolean isValidMove(int newCol, int newRow, Piece[][] board);
 
-    // Prüft, ob ein Ziel dieselbe Farbe hat
     public boolean isSameColor(Piece targetPiece) {
         return targetPiece != null && this.color == targetPiece.getColor();
     }
 
-    // Überprüft, ob der Weg zwischen zwei Feldern blockiert ist (hilfsweise Methode)
     protected boolean isPathBlocked(int startCol, int startRow, int endCol, int endRow, Piece[][] board) {
         int deltaCol = Integer.signum(endCol - startCol);
         int deltaRow = Integer.signum(endRow - startRow);
@@ -102,7 +109,7 @@ public abstract class Piece {
 
         while (col != endCol || row != endRow) {
             if (board[row][col] != null) {
-                return true; // Der Weg ist blockiert
+                return true;
             }
             col += deltaCol;
             row += deltaRow;
