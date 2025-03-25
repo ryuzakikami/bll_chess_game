@@ -6,8 +6,14 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+/**
+ * Die Klasse Sound ermöglicht das Abspielen von Soundeffekten im Spiel.
+ */
 public class Sound {
 
+    /**
+     * Enum, das die verschiedenen Soundtypen und zugehörige Dateinamen definiert.
+     */
     public enum SoundType {
         BLACK_CAPTURES("Black_captures.mp3"),
         BLACK_CASTLE("Black_castle.mp3"),
@@ -28,28 +34,40 @@ public class Sound {
             this.filename = filename;
         }
 
+        /**
+         * Gibt den Dateinamen des Sounds zurück.
+         * 
+         * @return Dateiname als String
+         */
         public String getFilename() {
             return filename;
         }
     }
 
+    /**
+     * Spielt den angegebenen Sound ab.
+     * 
+     * Dabei wird der Sound in einem eigenen Thread abgespielt, um den Spielablauf nicht zu blockieren.
+     * 
+     * @param soundType Der Typ des Sounds, der abgespielt werden soll
+     */
     public static void play(SoundType soundType) {
         String filePath = "src/main/resources/sounds/" + soundType.getFilename();
         
         try {
-            // Open the stream and keep it open during playback
+            // Öffne einen gepufferten InputStream zur Sounddatei
             BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filePath));
             AdvancedPlayer player = new AdvancedPlayer(bis);
             
-            // Play the sound on a separate thread
+            // Starte einen neuen Thread, um den Sound asynchron abzuspielen
             new Thread(() -> {
                 try {
-                    player.play();
+                    player.play();  // Sound abspielen
                 } catch (JavaLayerException e) {
                     e.printStackTrace();
                 } finally {
                     try {
-                        bis.close();  // Ensure the stream is closed after the sound finishes
+                        bis.close();  // Schließe den Stream, wenn der Sound abgespielt wurde
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
