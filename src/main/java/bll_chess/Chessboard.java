@@ -42,7 +42,7 @@ public class Chessboard implements Serializable {
     private int halfMoveClock = 0;
 
     /**
-     * Konstruktor: Initialisiert das Schachbrett, Zobrist-Tabelle und speichert
+     * Konstruktor: Initialisiert das Schachbrett, die Zobrist-Tabelle und speichert
      * die Ausgangsstellung.
      */
     public Chessboard() {
@@ -603,6 +603,77 @@ public class Chessboard implements Serializable {
     
         return isInCheck; // Liefert true, wenn der König nach dem Zug im Schach ist
     }
+    
+    /**
+     * Optional: Verarbeitet Live-Daten von Sensoren (z. B. vom Arduino), die einen Zug repräsentieren.
+     * Erwartet wird ein CSV-String im Format: "fromRow,fromCol,toRow,toCol".
+     * Diese Methode kann aufgerufen werden, um einen Live-Zug direkt im Schachbrett zu verarbeiten.
+     *
+     * @param sensorData Die vom Arduino empfangenen Sensordaten als String.
+     */
+    private int[] previousSensorData = null; // Hier speichern wir den letzten Zustand
+
+    public void processSensorData(String sensorData) {
+        if (sensorData.startsWith("START,") && sensorData.endsWith(",END")) {
+            // Entferne die Marker
+            String data = sensorData.substring(6, sensorData.length() - 4);
+            String[] parts = data.split(",");
+
+            if (parts.length == 64) {
+                int[] currentData = new int[64];
+                for (int i = 0; i < 64; i++) {
+                    try {
+                        currentData[i] = Integer.parseInt(parts[i].trim());
+                    } catch (NumberFormatException ex) {
+                        System.err.println("Fehler beim Parsen von Sensorwert: " + parts[i]);
+                        return;
+                    }
+                }
+
+                // Falls kein vorheriger Zustand existiert, einfach speichern und beenden
+                if (previousSensorData == null) {
+                    previousSensorData = currentData.clone(); // Ersten Wert speichern
+                    return;
+                }
+
+                // Berechnung des Zuges
+                int diffCount = 0;
+                int fromIndex = -1;
+                int toIndex = -1;
+
+                for (int i = 0; i < 64; i++) {
+                    if (currentData[i] != previousSensorData[i]) {
+                        diffCount++;
+                        if (previousSensorData[i] == 1 && currentData[i] == 0) {
+                            fromIndex = i;
+                        }
+                        if (previousSensorData[i] == 0 && currentData[i] == 1) {
+                            toIndex = i;
+                        }
+                    }
+                }
+
+                if (diffCount == 2 && fromIndex != -1 && toIndex != -1) {
+                    int fromRow = fromIndex / Chessboard.MAX_COL;
+                    int fromCol = fromIndex % Chessboard.MAX_COL;
+                    int toRow = toIndex / Chessboard.MAX_COL;
+                    int toCol = toIndex % Chessboard.MAX_COL;
+                    System.out.println("Sensorzug erkannt: " + fromRow + "," + fromCol + " -> " + toRow + "," + toCol);
+                    movePiece(fromRow, fromCol, toRow, toCol, true);
+                } else {
+                    System.out.println("Keine gültige Zugänderung erkannt, diffCount = " + diffCount);
+                }
+
+                // Aktualisiere den vorherigen Zustand
+                previousSensorData = currentData.clone();
+            } else {
+                System.err.println("Erwartet 64 Sensorwerte, aber erhalten: " + parts.length);
+            }
+        } else {
+            System.err.println("Ungültiges Sensor-Datenformat: " + sensorData);
+        }
+    }
+    
     
     /**
      * Zeichnet das Schachbrett samt Feldern, Figuren, Rahmen und Beschriftung.

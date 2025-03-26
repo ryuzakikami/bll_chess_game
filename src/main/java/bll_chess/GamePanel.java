@@ -1,6 +1,12 @@
 package main.java.bll_chess;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -14,9 +20,10 @@ import main.java.bll_chess.piece.Sound.SoundType;
 /**
  * Die Klasse GamePanel repräsentiert das Spiel-Panel, in dem das Schachbrett
  * gezeichnet und die Spielzüge animiert werden. Zusätzlich werden hier Eingaben
- * verarbeitet, ungültige Züge hervorgehoben und Sounds abgespielt.
+ * verarbeitet, ungültige Züge hervorgehoben, Sounds abgespielt und die aktuelle Stellung
+ * als PNG exportiert. Neu: Es werden serielle Daten vom Arduino empfangen, die Züge repräsentieren.
  */
-public class GamePanel extends JPanel implements Runnable {
+public class GamePanel extends JPanel implements Runnable, KeyListener {
     // Thread für das Spiel, um kontinuierlich zu aktualisieren
     private Thread gameThread;
     public static final int SQUARE_SIZE = 100;  // Größe eines Schachfeldes in Pixeln
@@ -33,16 +40,39 @@ public class GamePanel extends JPanel implements Runnable {
     
     // Das Schachbrett-Objekt, welches die Spiellogik enthält
     private Chessboard chessboard;
+    // ArduinoConnector, um Daten vom Arduino zu empfangen
+    private ArduinoConnector arduino;
+
+    // Zähler für den PNG-Export
+    private int exportCount = 1;
 
     /**
      * Konstruktor des GamePanel.
-     * Setzt die bevorzugte Größe und initialisiert das Schachbrett.
+     * Setzt die bevorzugte Größe, initialisiert das Schachbrett, fügt den KeyListener hinzu
+     * und startet die serielle Verbindung zum Arduino.
      */
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setLayout(null);
         chessboard = new Chessboard();
+        setFocusable(true);
+        addKeyListener(this);
+        
+        // Initialisiere den ArduinoConnector (Passe den Portnamen an deine Umgebung an, z.B. "COM3")
+        arduino = new ArduinoConnector("COM6");
+        // Registriere einen Listener, der empfangene Daten verarbeitet
+        arduino.setDataListener(data -> {
+            chessboard.processSensorData(data);
+        });
+        
     }
+
+    /**
+     * Verarbeitet die vom Arduino empfangenen Daten.
+     * Erwartet wird ein String im Format: fromRow,fromCol,toRow,toCol
+     *
+     * @param data Die empfangenen Daten als String
+   
 
     /**
      * Prüft, ob der angegebene Zug ein En-Passant-Zug ist.
@@ -342,6 +372,53 @@ public class GamePanel extends JPanel implements Runnable {
             g2.setStroke(oldStroke);
         }
     }
+    
+    /**
+     * Exportiert das aktuelle Schachbrett als PNG-Bild.
+     * Dabei wird das Panel in ein BufferedImage gerendert und anschließend als PNG gespeichert.
+     *
+     * @param filePath Pfad inklusive Dateinamen, unter dem das Bild gespeichert werden soll.
+     */
+    public void exportToPNG(String filePath) {
+        int width = getWidth();
+        int height = getHeight();
+        
+        // Erstelle ein BufferedImage und rendere das Panel darauf
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = image.createGraphics();
+        this.paint(g2d); // Das Panel wird auf das Bild gemalt
+        g2d.dispose();
+        
+        // Speichere das Bild als PNG
+        try {
+            File file = new File(filePath);
+            ImageIO.write(image, "png", file);
+            System.out.println("Schachbrett erfolgreich exportiert: " + filePath);
+        } catch (IOException e) {
+            System.err.println("Fehler beim Exportieren der PNG: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * KeyListener-Methode: Wird aufgerufen, wenn eine Taste gedrückt wird.
+     * Exportiert das Schachbrett als PNG, wenn die Taste "S" gedrückt wird.
+     *
+     * @param e Das KeyEvent
+     */
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_S) { // Wenn "S" gedrückt wird
+            // Exportiere das Schachbrett-Bild mit einem fortlaufenden Namen
+            exportToPNG("C:\\Users\\youce\\Desktop\\schachpngs\\schachbrett_" + exportCount + ".png");
+            exportCount++;
+        }
+    }
+    
+    @Override
+    public void keyReleased(KeyEvent e) { }
+    
+    @Override
+    public void keyTyped(KeyEvent e) { }
 
     /**
      * Die run()-Methode des Runnable-Interfaces sorgt dafür, dass das Panel

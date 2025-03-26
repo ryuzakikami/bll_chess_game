@@ -1,5 +1,7 @@
 package main.java.bll_chess;
+
 import javax.swing.JFrame;
+
 public class Main {
     public static void main(String[] args) {
         JFrame frame = new JFrame("Schachbrett");
@@ -11,13 +13,11 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-        Thread gameThread = new Thread(panel);
-        gameThread.start();
-
-         try {
-            panel.processMove(7, 0, 6, 0);
-         } catch (Exception e) {
-       
-         }
+        
+        // Starte das Spiel (der GamePanel-Thread übernimmt das kontinuierliche Neuzeichnen)
+        panel.startGame();
+        
+        // Optional: Falls du Testzüge einspielen möchtest, kannst du diese hier hinzufügen.
+        // In einem echten Spiel mit realen Figuren erfolgt der Zugablauf durch die Live-Daten vom Arduino.
     }
 }
