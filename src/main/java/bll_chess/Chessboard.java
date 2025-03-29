@@ -11,16 +11,23 @@ import main.java.bll_chess.piece.*;
 
 /**
  * Die Klasse Chessboard repräsentiert das Schachbrett und verwaltet
- * alle Spiellogiken wie das Bewegen der Figuren, Zobrist-Hashing, Zugrücknahme,
+ * alle Spiellogiken wie Zugvalidierung, Zobrist-Hashing, Zugrücknahme,
  * Rochade, Bauernumwandlung, Wiederholungsprüfung, 50-Züge-Regel, etc.
+ *
+ * Neu: Das interne 2D-Array board wird so strukturiert, dass:
+ * - board[0][*] die unterste (visuelle) Reihe (Reihe 1, wo Weiß beginnt) darstellt,
+ * - board[7][*] die oberste (visuelle) Reihe (Reihe 8, wo Schwarz steht).
+ *
+ * Die GUI-Darstellung bleibt unverändert (Weiß unten, Schwarz oben).
  */
 public class Chessboard implements Serializable {
-    public static final int MAX_COL = 8;        // Anzahl der Spalten
-    public static final int MAX_ROW = 8;        // Anzahl der Reihen
-    public static final int SQUARE_SIZE = 100;  // Größe eines Feldes in Pixeln
-    public static final int MARGIN = 40;        // Abstand um das Schachbrett
+    public static final int MAX_COL = 8;         // Anzahl der Spalten
+    public static final int MAX_ROW = 8;         // Anzahl der Reihen
+    public static final int SQUARE_SIZE = 100;   // Größe eines Feldes in Pixeln
+    public static final int MARGIN = 40;         // Abstand um das Schachbrett
 
-    // Das Schachbrett als 2D-Array von Figuren
+    // Das Schachbrett als 2D-Array von Figuren.
+    // board[0] entspricht der untersten Zeile (visuelle Reihe 1) und board[7] der obersten (visuelle Reihe 8).
     private Piece[][] board;
     // Aktueller Spieler (0 = Weiß, 1 = Schwarz)
     private int currentPlayer = 0;
@@ -30,7 +37,7 @@ public class Chessboard implements Serializable {
     private Stack<ChessMove> moveHistory = new Stack<>();
     // Flag, ob eine Bauernumwandlung (Promotion) aussteht
     private boolean promotionPending = false;
-    
+
     // Für Zobrist-Hashing:
     // Dimensionen: [Farbe (0/1)][Figurentyp (0:Pawn,1:Knight,2:Bishop,3:Rook,4:Queen,5:King)][Feld (0-63)]
     private long[][][] zobristTable;
@@ -51,30 +58,34 @@ public class Chessboard implements Serializable {
         // Speichere die Ausgangsstellung (für Wiederholungsprüfung)
         positionHistory.add(currentZobristHash);
     }
-    
+
     /**
      * Initialisiert das Schachbrett und platziert alle Figuren.
+     * 
+     * Neu: Die interne Darstellung entspricht der visuellen Anordnung:
+     * - Weiße Hauptfiguren in board[0] (Reihe 1) und weiße Bauern in board[1].
+     * - Schwarze Bauern in board[6] und schwarze Hauptfiguren in board[7].
      */
     private void initializeBoard() {
         board = new Piece[MAX_ROW][MAX_COL];
         // Platziere die Figuren an den Startpositionen:
-        // Für weiße Figuren: letzte Reihe (Index 7) und weiße Bauern in der Reihe darüber (Index 6)
-        // Für schwarze Figuren: erste Reihe (Index 0) und schwarze Bauern in der Reihe darunter (Index 1)
-        placePieces(7, 6, 0, 1);
+        // Weiße Figuren (unten): Hauptfiguren in Reihe 0, Bauern in Reihe 1.
+        // Schwarze Figuren (oben): Bauern in Reihe 6, Hauptfiguren in Reihe 7.
+        placePieces(0, 1, 7, 6);
         // Setze den Halbzugzähler zurück
         halfMoveClock = 0;
     }
-    
+
     /**
      * Platziert die Figuren auf dem Brett.
-     * 
-     * @param whiteRow    Zeile für weiße Figuren
-     * @param whitePawnRow Zeile für weiße Bauern
-     * @param blackRow    Zeile für schwarze Figuren
-     * @param blackPawnRow Zeile für schwarze Bauern
+     *
+     * @param whiteRow     Zeile für weiße Hauptfiguren (interner Index)
+     * @param whitePawnRow Zeile für weiße Bauern (interner Index)
+     * @param blackRow     Zeile für schwarze Hauptfiguren (interner Index)
+     * @param blackPawnRow Zeile für schwarze Bauern (interner Index)
      */
     private void placePieces(int whiteRow, int whitePawnRow, int blackRow, int blackPawnRow) {
-        // Weiße Figuren
+        // Weiße Figuren (untere Reihe, board[0])
         board[whiteRow][0] = new Rook(0, 0, whiteRow);
         board[whiteRow][1] = new Knight(0, 1, whiteRow);
         board[whiteRow][2] = new Bishop(0, 2, whiteRow);
@@ -83,11 +94,12 @@ public class Chessboard implements Serializable {
         board[whiteRow][5] = new Bishop(0, 5, whiteRow);
         board[whiteRow][6] = new Knight(0, 6, whiteRow);
         board[whiteRow][7] = new Rook(0, 7, whiteRow);
+        // Weiße Bauern in board[1]
         for (int col = 0; col < MAX_COL; col++) {
             board[whitePawnRow][col] = new Pawn(0, col, whitePawnRow);
         }
-        
-        // Schwarze Figuren
+
+        // Schwarze Figuren (obere Reihe, board[7])
         board[blackRow][0] = new Rook(1, 0, blackRow);
         board[blackRow][1] = new Knight(1, 1, blackRow);
         board[blackRow][2] = new Bishop(1, 2, blackRow);
@@ -96,11 +108,12 @@ public class Chessboard implements Serializable {
         board[blackRow][5] = new Bishop(1, 5, blackRow);
         board[blackRow][6] = new Knight(1, 6, blackRow);
         board[blackRow][7] = new Rook(1, 7, blackRow);
+        // Schwarze Bauern in board[6]
         for (int col = 0; col < MAX_COL; col++) {
             board[blackPawnRow][col] = new Pawn(1, col, blackPawnRow);
         }
     }
-    
+
     /**
      * Initialisiert die Zobrist-Tabelle mit zufälligen Long-Werten.
      * Diese Tabelle wird verwendet, um schnell einen eindeutigen Hash für jede Stellung zu berechnen.
@@ -128,10 +141,10 @@ public class Chessboard implements Serializable {
             }
         }
     }
-    
+
     /**
      * Liefert den Typ der Figur als int-Wert.
-     * 
+     *
      * @param piece Die zu überprüfende Figur
      * @return 0 für Bauer, 1 für Springer, 2 für Läufer, 3 für Turm, 4 für Dame, 5 für König; ansonsten -1
      */
@@ -144,11 +157,10 @@ public class Chessboard implements Serializable {
         if (piece instanceof King) return 5;
         return -1;
     }
-    
+
     /**
      * Aktualisiert den Zobrist-Hash für eine bestimmte Position.
-     * Wird aufgerufen, wenn eine Figur von einer Position entfernt oder hinzugefügt wird.
-     * 
+     *
      * @param piece Die betroffene Figur
      * @param row   Zeile der Position
      * @param col   Spalte der Position
@@ -159,21 +171,21 @@ public class Chessboard implements Serializable {
         int pos = row * MAX_COL + col;
         currentZobristHash ^= zobristTable[piece.getColor()][type][pos];
     }
-    
+
     /**
      * Führt einen Zug aus und aktualisiert alle relevanten Zustände (Zobrist-Hash, Zug-Historie,
      * En Passant, Bauernumwandlung, Rochade, Halbzugzähler, etc.).
-     * 
-     * @param fromRow   Startreihe der Figur
-     * @param fromCol   Startspalte der Figur
-     * @param toRow     Zielreihe der Figur
-     * @param toCol     Zielspalte der Figur
+     *
+     * @param fromRow    Startreihe der Figur
+     * @param fromCol    Startspalte der Figur
+     * @param toRow      Zielreihe der Figur
+     * @param toCol      Zielspalte der Figur
      * @param switchTurn Flag, ob der Spielerwechsel nach dem Zug erfolgen soll
      */
     public void movePiece(int fromRow, int fromCol, int toRow, int toCol, boolean switchTurn) {
         Piece movingPiece = board[fromRow][fromCol];
         Piece captured = board[toRow][toCol];
-    
+
         // Setze En Passant für alle Bauern zurück
         for (int r = 0; r < MAX_ROW; r++) {
             for (int c = 0; c < MAX_COL; c++) {
@@ -182,49 +194,50 @@ public class Chessboard implements Serializable {
                 }
             }
         }
-    
-        // En Passant: Wenn der Bauer diagonal zieht, aber das Zielfeld leer ist,
-        // wird der gegnerische Bauer en passant geschlagen.
+
+        // En Passant: Falls ein Bauer diagonal in ein leeres Feld zieht,
+        // wird der gegnerische Bauer auf der gleichen Reihe (dem Ausgangsfeld) geschlagen.
         if (movingPiece instanceof Pawn && Math.abs(toCol - fromCol) == 1 && board[toRow][toCol] == null) {
-            int capturedPawnRow = fromRow; 
+            int capturedPawnRow = fromRow; // Der geschlagene Bauer steht in der Ausgangsreihe
             captured = board[capturedPawnRow][toCol];
-            // Aktualisiere den Hash: Entferne den geschlagenen Bauern
             updateZobrist(captured, capturedPawnRow, toCol);
             board[capturedPawnRow][toCol] = null;
         }
-    
+
         // Entferne die Figur von der alten Position im Hash
         updateZobrist(movingPiece, fromRow, fromCol);
         if (captured != null) {
             updateZobrist(captured, toRow, toCol);
         }
-    
+
         // Speichere den Zug in der Historie
         moveHistory.push(new ChessMove(movingPiece, fromRow, fromCol, toRow, toCol, captured));
-    
+
         // Führe den Zug auf dem Brett aus
         board[toRow][toCol] = movingPiece;
         board[fromRow][fromCol] = null;
-    
+
         // Aktualisiere den Hash: Füge die Figur an der neuen Position hinzu
         updateZobrist(movingPiece, toRow, toCol);
-    
+
         if (movingPiece != null) {
             // Aktualisiere die Position der Figur
             movingPiece.setRow(toRow);
             movingPiece.setCol(toCol);
-            
-            // Prüfe auf Bauernumwandlung (Promotion)
+
+            // Bauernumwandlung (Promotion):
+            // Weiß fördert beim Erreichen von board[7], Schwarz beim Erreichen von board[0].
             if (movingPiece instanceof Pawn) {
                 handlePawnPromotion(movingPiece, toRow, toCol);
             }
-       
-            // Wenn der Bauer zwei Felder vorwärts geht, setze En Passant
-            if (movingPiece instanceof Pawn && Math.abs(toRow - fromRow) == 2) {
+
+            // Wenn ein Bauer zwei Felder vorwärts geht, setze En Passant
+            int rowDifference = toRow - fromRow;
+            if (movingPiece instanceof Pawn && Math.abs(rowDifference) == 2) {
                 ((Pawn) movingPiece).setEnPassantEligible(true);
             }
-    
-            // Rochade: Wenn der König zwei Felder zieht, wird die Rochade ausgeführt
+
+            // Rochade
             if (movingPiece instanceof King && Math.abs(toCol - fromCol) == 2) {
                 handleCastling(fromRow, fromCol, toRow, toCol);
                 ((King) movingPiece).markAsMoved();
@@ -232,215 +245,206 @@ public class Chessboard implements Serializable {
                 ((King) movingPiece).markAsMoved();
             }
         }
-        
-        // Aktualisiere den Halbzugzähler: Wird bei Bauernzug oder Schlag zurückgesetzt
+
+        // Aktualisiere den Halbzugzähler
         if (movingPiece instanceof Pawn || captured != null) {
             halfMoveClock = 0;
         } else {
             halfMoveClock++;
         }
-        
+
         // Speichere die aktuelle Stellungshash für Wiederholungsprüfung
         positionHistory.add(currentZobristHash);
-    
+
         // Prüfe, ob der aktuelle Spieler im Schach steht
         isCheck = isKingInCheck(currentPlayer);
         if (switchTurn) {
             switchPlayer();
         }
     }
-    
+
     /**
-     * Behandelt die Bauernumwandlung (Promotion), wenn ein Bauer die gegnerische Grundreihe erreicht.
-     * Öffnet ein Dialogfenster zur Auswahl der gewünschten Figur.
-     * 
+     * Behandelt die Bauernumwandlung (Promotion).
+     *
      * @param pawn  Der Bauer, der umgewandelt werden soll
-     * @param toRow Zielreihe (muss die Umwandlungsreihe sein)
+     * @param toRow Zielreihe
      * @param toCol Zielspalte
      */
     private void handlePawnPromotion(Piece pawn, int toRow, int toCol) {
-        if ((pawn.getColor() == 0 && toRow == 0) || (pawn.getColor() == 1 && toRow == MAX_ROW - 1)) {
+        // Bei der neuen Logik:
+        // Weißer Bauer wird befördert, wenn er board[7] erreicht, schwarzer, wenn er board[0] erreicht.
+        if ((pawn.getColor() == 0 && toRow == 7) || (pawn.getColor() == 1 && toRow == 0)) {
             promotionPending = true;
-            // Entferne den Bauern, da er umgewandelt wird
-            board[toRow][toCol] = null; 
+            board[toRow][toCol] = null;
             String colorPrefix = (pawn.getColor() == 0) ? "white" : "black";
-            // Erstelle Icons für die Auswahl der Umwandlungsfiguren
-            ImageIcon queenIcon  = new ImageIcon("src/main/resources/pieces/" + colorPrefix + "Queen.png");
-            ImageIcon rookIcon   = new ImageIcon("src/main/resources/pieces/" + colorPrefix + "Rook.png");
+            ImageIcon queenIcon = new ImageIcon("src/main/resources/pieces/" + colorPrefix + "Queen.png");
+            ImageIcon rookIcon = new ImageIcon("src/main/resources/pieces/" + colorPrefix + "Rook.png");
             ImageIcon bishopIcon = new ImageIcon("src/main/resources/pieces/" + colorPrefix + "Bishop.png");
             ImageIcon knightIcon = new ImageIcon("src/main/resources/pieces/" + colorPrefix + "Knight.png");
-            Object[] promotionOptions = { queenIcon, rookIcon, bishopIcon, knightIcon };
-        
-            // Dialog zur Auswahl der Umwandlungsfigur
+            Object[] promotionOptions = {queenIcon, rookIcon, bishopIcon, knightIcon};
+
             int choice = JOptionPane.showOptionDialog(
-                null,
-                "Wähle die Figur, in die der Bauer umgewandelt werden soll:",
-                "Beförderung",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                promotionOptions,
-                promotionOptions[0]
+                    null,
+                    "Wähle die Figur, in die der Bauer umgewandelt werden soll:",
+                    "Beförderung",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    promotionOptions,
+                    promotionOptions[0]
             );
-        
+
             Piece promotedPiece;
             switch (choice) {
-                case 0: promotedPiece = new Queen(pawn.getColor(), toCol, toRow); break;
-                case 1: promotedPiece = new Rook(pawn.getColor(), toCol, toRow); break;
-                case 2: promotedPiece = new Bishop(pawn.getColor(), toCol, toRow); break;
-                case 3: promotedPiece = new Knight(pawn.getColor(), toCol, toRow); break;
-                default: promotedPiece = new Queen(pawn.getColor(), toCol, toRow); break;
+                case 0:
+                    promotedPiece = new Queen(pawn.getColor(), toCol, toRow);
+                    break;
+                case 1:
+                    promotedPiece = new Rook(pawn.getColor(), toCol, toRow);
+                    break;
+                case 2:
+                    promotedPiece = new Bishop(pawn.getColor(), toCol, toRow);
+                    break;
+                case 3:
+                    promotedPiece = new Knight(pawn.getColor(), toCol, toRow);
+                    break;
+                default:
+                    promotedPiece = new Queen(pawn.getColor(), toCol, toRow);
+                    break;
             }
             board[toRow][toCol] = promotedPiece;
-            // Aktualisiere den Zobrist-Hash: Füge das beförderte Piece hinzu
             updateZobrist(promotedPiece, toRow, toCol);
             promotionPending = false;
         }
     }
-    
+
     /**
-     * Behandelt die Rochade, indem der Turm an die richtige Position bewegt wird.
-     * 
+     * Behandelt die Rochade.
+     *
      * @param fromRow Startreihe des Königs
      * @param fromCol Startspalte des Königs
      * @param toRow   Zielreihe des Königs
-     * @param toCol   Zielspalte des Königs (bei Rochade 2 Felder vom Ausgang entfernt)
+     * @param toCol   Zielspalte des Königs
      */
     private void handleCastling(int fromRow, int fromCol, int toRow, int toCol) {
-        // Rochade wird nur für den König ausgeführt
         if (!(board[fromRow][fromCol] instanceof King)) {
             return;
         }
-        
+
         King king = (King) board[fromRow][fromCol];
         Rook rook = null;
-        // Bestimme, ob es sich um eine Königs- (rechts) oder Damenrochade (links) handelt
         int rookCol = (toCol > fromCol) ? 7 : 0;
-    
-        // Rochade ist nur möglich, wenn weder König noch Turm bereits bewegt wurden
-        if (king.hasMoved() || (rook = (Rook) board[toRow][rookCol]) == null || rook.hasMoved()) {
+
+        if (king.hasMoved() || (rook = (Rook) board[fromRow][rookCol]) == null || rook.hasMoved()) {
             return;
         }
-    
-        // Überprüfe, ob alle Felder zwischen König und Turm frei sind
+
         int step = (toCol > fromCol) ? 1 : -1;
         for (int col = fromCol + step; col != toCol; col += step) {
             if (board[fromRow][col] != null) {
-                return; // Es befindet sich eine Figur zwischen König und Turm
+                return;
             }
         }
-    
-        // Stelle sicher, dass der König nicht im Schach steht und der Zug ihn nicht ins Schach führt
+
         if (isKingInCheck(currentPlayer) || isMoveLeavingKingInCheck(fromRow, fromCol, toRow, toCol)) {
             return;
         }
-    
-        // Führe die Rochade aus:
-        // Bewege den König an die Zielposition
+
         board[toRow][toCol] = king;
         board[fromRow][fromCol] = null;
         king.setCol(toCol);
         king.markAsMoved();
-    
-        // Bewege den Turm in die entsprechende Position neben dem König
+
         board[toRow][toCol - step] = rook;
         board[fromRow][rookCol] = null;
         rook.setCol(toCol - step);
         rook.markAsMoved();
-    
-        // Aktualisiere den Zobrist-Hash für beide Züge
+
         updateZobrist(king, toRow, toCol);
         updateZobrist(rook, toRow, toCol - step);
     }
-    
+
     /**
      * Macht den letzten Zug rückgängig.
-     * Aktualisiert dabei die Stellung, den Zobrist-Hash und führt ggf. auch eine Rochade rückgängig aus.
      */
     public void undoLastMove() {
         if (!moveHistory.isEmpty()) {
             ChessMove lastMove = moveHistory.pop();
-            // Entferne das Piece von der Zielposition im Hash
             updateZobrist(lastMove.getPiece(), lastMove.getToRow(), lastMove.getToCol());
             board[lastMove.getFromRow()][lastMove.getFromCol()] = lastMove.getPiece();
             board[lastMove.getToRow()][lastMove.getToCol()] = lastMove.getCapturedPiece();
-            // Aktualisiere den Hash: Füge das Piece an der alten Position wieder hinzu
             updateZobrist(lastMove.getPiece(), lastMove.getFromRow(), lastMove.getFromCol());
             if (lastMove.getCapturedPiece() != null) {
                 updateZobrist(lastMove.getCapturedPiece(), lastMove.getToRow(), lastMove.getToCol());
             }
-            // Setze die Position der Figur zurück
             lastMove.getPiece().setRow(lastMove.getFromRow());
             lastMove.getPiece().setCol(lastMove.getFromCol());
-            
-            // Falls es sich um eine Rochade handelt, setze die Position des Turms zurück
+
             if (lastMove.getPiece() instanceof King && Math.abs(lastMove.getToCol() - lastMove.getFromCol()) == 2) {
                 resetRookPosition(lastMove);
             }
-            
+
             switchPlayer();
         }
     }
-    
+
     /**
      * Setzt die Position des Turms nach einer Rückgängigmachung einer Rochade zurück.
-     * 
-     * @param move Der Zug, der rückgängig gemacht wurde (enthält Informationen zu Rochade)
+     *
+     * @param move Der Zug, der rückgängig gemacht wurde
      */
     private void resetRookPosition(ChessMove move) {
         int rookCol = (move.getToCol() > move.getFromCol()) ? 7 : 0;
         int newRookCol = (move.getToCol() > move.getFromCol()) ? move.getToCol() - 1 : move.getToCol() + 1;
-        
+
         Rook rook = (Rook) board[move.getToRow()][newRookCol];
-        // Entferne den Turm von der aktuellen Position im Hash
         updateZobrist(rook, move.getToRow(), newRookCol);
         board[move.getToRow()][newRookCol] = null;
         board[move.getToRow()][rookCol] = rook;
-        // Füge den Turm an der alten Position wieder hinzu im Hash
         updateZobrist(rook, move.getToRow(), rookCol);
-        
+
         if (rook != null) {
             rook.setCol(rookCol);
         }
     }
-    
+
     /**
      * Gibt das aktuelle Schachbrett (2D-Array) zurück.
-     * 
+     *
      * @return Das Schachbrett
      */
     public Piece[][] getBoard() {
         return board;
     }
-    
+
     /**
      * Gibt den aktuellen Spieler zurück.
-     * 
+     *
      * @return 0 für Weiß, 1 für Schwarz
      */
     public int getCurrentPlayer() {
         return currentPlayer;
     }
-    
+
     /**
      * Gibt zurück, ob eine Bauernumwandlung (Promotion) noch aussteht.
-     * 
+     *
      * @return true, wenn Promotion aussteht, sonst false
      */
     public boolean isPromotionPending() {
         return promotionPending;
     }
-    
+
     /**
      * Wechselt den aktuellen Spieler.
      */
     public void switchPlayer() {
         currentPlayer = (currentPlayer == 0) ? 1 : 0;
     }
-    
+
     /**
      * Überprüft, ob der übergebene Zug vom richtigen Spieler ausgeführt wird.
-     * 
+     *
      * @param piece Die Figur, die gezogen werden soll
      * @return true, wenn die Figur dem aktuellen Spieler gehört, sonst false
      */
@@ -456,10 +460,10 @@ public class Chessboard implements Serializable {
         }
         return true;
     }
-    
+
     /**
      * Prüft, ob der König des angegebenen Spielers im Schach steht.
-     * 
+     *
      * @param player Der Spieler (0 = Weiß, 1 = Schwarz)
      * @return true, wenn der König im Schach steht, sonst false
      */
@@ -477,7 +481,7 @@ public class Chessboard implements Serializable {
             if (king != null) break;
         }
         if (king == null) return false;
-    
+
         int opponentColor = 1 - player;
         // Prüfe alle gegnerischen Figuren, ob eine den König angreift
         for (int row = 0; row < MAX_ROW; row++) {
@@ -492,10 +496,10 @@ public class Chessboard implements Serializable {
         }
         return false;
     }
-    
+
     /**
-     * Überprüft, ob der angegebene Spieler schachmatt ist.
-     * 
+     * Prüft, ob der angegebene Spieler schachmatt ist.
+     *
      * @param player Der Spieler (0 = Weiß, 1 = Schwarz)
      * @return true, wenn kein gültiger Zug den König aus dem Schach befreien kann, sonst false
      */
@@ -503,18 +507,16 @@ public class Chessboard implements Serializable {
         if (!isKingInCheck(player)) {
             return false;
         }
-    
-        // Durchlaufe alle Figuren des Spielers und prüfe, ob ein gültiger Zug existiert
+
         for (int row = 0; row < MAX_ROW; row++) {
             for (int col = 0; col < MAX_COL; col++) {
                 Piece piece = board[row][col];
                 if (piece != null && piece.getColor() == player) {
-                    // Prüfe für jede Figur alle möglichen Züge
                     for (int newRow = 0; newRow < MAX_ROW; newRow++) {
                         for (int newCol = 0; newCol < MAX_COL; newCol++) {
                             if (piece.isValidMove(newCol, newRow, board)) {
                                 if (!isMoveLeavingKingInCheck(row, col, newRow, newCol)) {
-                                    return false; // Es existiert mindestens ein gültiger Zug
+                                    return false;
                                 }
                             }
                         }
@@ -522,21 +524,20 @@ public class Chessboard implements Serializable {
                 }
             }
         }
-        return true; // Keine gültigen Züge gefunden – Schachmatt
+        return true;
     }
-    
+
     /**
      * Prüft, ob der angegebene Spieler remis ist (Patt).
-     * 
+     *
      * @param player Der Spieler (0 = Weiß, 1 = Schwarz)
      * @return true, wenn der Spieler keinen gültigen Zug hat und der König nicht im Schach steht, sonst false
      */
     public boolean isStalemate(int player) {
         if (isKingInCheck(player)) {
-            return false; // Ist der König im Schach, kann es nicht Patt sein
+            return false;
         }
-    
-        // Durchlaufe alle Figuren des Spielers und prüfe, ob ein gültiger Zug existiert
+
         for (int row = 0; row < MAX_ROW; row++) {
             for (int col = 0; col < MAX_COL; col++) {
                 Piece piece = board[row][col];
@@ -545,7 +546,7 @@ public class Chessboard implements Serializable {
                         for (int newCol = 0; newCol < MAX_COL; newCol++) {
                             if (piece.isValidMove(newCol, newRow, board)) {
                                 if (!isMoveLeavingKingInCheck(row, col, newRow, newCol)) {
-                                    return false; // Es gibt einen gültigen Zug
+                                    return false;
                                 }
                             }
                         }
@@ -553,12 +554,12 @@ public class Chessboard implements Serializable {
                 }
             }
         }
-        return true; // Kein gültiger Zug vorhanden – Patt
+        return true;
     }
-    
+
     /**
      * Prüft, ob die aktuelle Stellung mindestens dreifach wiederholt wurde.
-     * 
+     *
      * @return true, wenn dieselbe Stellung drei oder mehr Mal erreicht wurde, sonst false
      */
     public boolean isThreefoldRepetition() {
@@ -570,20 +571,20 @@ public class Chessboard implements Serializable {
         }
         return count >= 3;
     }
-    
+
     /**
      * Prüft die 50-Züge-Regel.
-     * 
+     *
      * @return true, wenn seit dem letzten Bauernzug oder Schlag 100 Halbzüge vergangen sind, sonst false
      */
     public boolean isFiftyMoveRule() {
         return halfMoveClock >= 100;
     }
-    
+
     /**
      * Prüft, ob ein geplanter Zug den König im Schach belässt.
      * Temporär wird der Zug durchgeführt, die Stellung geprüft und dann wieder zurückgesetzt.
-     * 
+     *
      * @param fromRow Startreihe
      * @param fromCol Startspalte
      * @param toRow   Zielreihe
@@ -594,125 +595,58 @@ public class Chessboard implements Serializable {
         Piece tempPiece = board[toRow][toCol];
         board[toRow][toCol] = board[fromRow][fromCol];
         board[fromRow][fromCol] = null;
-    
+
         boolean isInCheck = isKingInCheck(currentPlayer);
-    
+
         // Stelle den ursprünglichen Zustand wieder her
         board[fromRow][fromCol] = board[toRow][toCol];
         board[toRow][toCol] = tempPiece;
-    
-        return isInCheck; // Liefert true, wenn der König nach dem Zug im Schach ist
+
+        return isInCheck;
     }
-    
-    /**
-     * Optional: Verarbeitet Live-Daten von Sensoren (z. B. vom Arduino), die einen Zug repräsentieren.
-     * Erwartet wird ein CSV-String im Format: "fromRow,fromCol,toRow,toCol".
-     * Diese Methode kann aufgerufen werden, um einen Live-Zug direkt im Schachbrett zu verarbeiten.
-     *
-     * @param sensorData Die vom Arduino empfangenen Sensordaten als String.
-     */
-    private int[] previousSensorData = null; // Hier speichern wir den letzten Zustand
 
-    public void processSensorData(String sensorData) {
-        if (sensorData.startsWith("START,") && sensorData.endsWith(",END")) {
-            // Entferne die Marker
-            String data = sensorData.substring(6, sensorData.length() - 4);
-            String[] parts = data.split(",");
-
-            if (parts.length == 64) {
-                int[] currentData = new int[64];
-                for (int i = 0; i < 64; i++) {
-                    try {
-                        currentData[i] = Integer.parseInt(parts[i].trim());
-                    } catch (NumberFormatException ex) {
-                        System.err.println("Fehler beim Parsen von Sensorwert: " + parts[i]);
-                        return;
-                    }
-                }
-
-                // Falls kein vorheriger Zustand existiert, einfach speichern und beenden
-                if (previousSensorData == null) {
-                    previousSensorData = currentData.clone(); // Ersten Wert speichern
-                    return;
-                }
-
-                // Berechnung des Zuges
-                int diffCount = 0;
-                int fromIndex = -1;
-                int toIndex = -1;
-
-                for (int i = 0; i < 64; i++) {
-                    if (currentData[i] != previousSensorData[i]) {
-                        diffCount++;
-                        if (previousSensorData[i] == 1 && currentData[i] == 0) {
-                            fromIndex = i;
-                        }
-                        if (previousSensorData[i] == 0 && currentData[i] == 1) {
-                            toIndex = i;
-                        }
-                    }
-                }
-
-                if (diffCount == 2 && fromIndex != -1 && toIndex != -1) {
-                    int fromRow = fromIndex / Chessboard.MAX_COL;
-                    int fromCol = fromIndex % Chessboard.MAX_COL;
-                    int toRow = toIndex / Chessboard.MAX_COL;
-                    int toCol = toIndex % Chessboard.MAX_COL;
-                    System.out.println("Sensorzug erkannt: " + fromRow + "," + fromCol + " -> " + toRow + "," + toCol);
-                    movePiece(fromRow, fromCol, toRow, toCol, true);
-                } else {
-                    System.out.println("Keine gültige Zugänderung erkannt, diffCount = " + diffCount);
-                }
-
-                // Aktualisiere den vorherigen Zustand
-                previousSensorData = currentData.clone();
-            } else {
-                System.err.println("Erwartet 64 Sensorwerte, aber erhalten: " + parts.length);
-            }
-        } else {
-            System.err.println("Ungültiges Sensor-Datenformat: " + sensorData);
-        }
-    }
-    
-    
     /**
      * Zeichnet das Schachbrett samt Feldern, Figuren, Rahmen und Beschriftung.
      * 
+     * Neu: Da board[0] die unterste Reihe darstellt, wird beim Zeichnen umgerechnet, 
+     * sodass die visuelle Darstellung (Weiß unten, Schwarz oben, Reihen 1 bis 8 von unten nach oben) erhalten bleibt.
+     *
      * @param g2 Graphics2D-Objekt, das zum Zeichnen verwendet wird
      */
     public void draw(Graphics2D g2) {
         int margin = MARGIN;
         int boardSize = MAX_COL * SQUARE_SIZE;
-    
-        // Zeichne die Schachbrettfelder in zwei verschiedenen Farben
+
+        // Zeichne die Felder: interne Zeile 0 entspricht visual bottom (Reihe 1)
         for (int row = 0; row < MAX_ROW; row++) {
             for (int col = 0; col < MAX_COL; col++) {
                 Color fieldColor = ((row + col) % 2 == 0)
                         ? new Color(210, 165, 125)
                         : new Color(175, 115, 70);
                 int x = margin + col * SQUARE_SIZE;
-                int y = margin + row * SQUARE_SIZE;
+                // Umrechnung: board[0] soll unten erscheinen
+                int y = margin + (MAX_ROW - 1 - row) * SQUARE_SIZE;
                 g2.setColor(fieldColor);
                 g2.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
             }
         }
-    
-        // Zeichne die Figuren. getX/getY berücksichtigen bereits den Animationsoffset.
+
+        // Zeichne die Figuren entsprechend ihrer internen Position
         for (int row = 0; row < MAX_ROW; row++) {
             for (int col = 0; col < MAX_COL; col++) {
                 Piece piece = board[row][col];
                 if (piece != null) {
-                    int x = margin + piece.getX(SQUARE_SIZE);
-                    int y = margin + piece.getY(SQUARE_SIZE);
+                    int x = margin + col * SQUARE_SIZE;
+                    int y = margin + (MAX_ROW - 1 - row) * SQUARE_SIZE;
                     g2.drawImage(piece.getImage(), x, y, SQUARE_SIZE, SQUARE_SIZE, null);
                 }
             }
         }
-    
+
         // Zeichne einen schwarzen Rahmen um das Brett
         g2.setColor(Color.BLACK);
         g2.drawRect(margin, margin, boardSize, boardSize);
-    
+
         // Zeichne die Beschriftung der Spalten (a-h) und Reihen (1-8)
         g2.setColor(Color.BLACK);
         g2.setFont(new Font("Arial", Font.BOLD, 16));
@@ -724,9 +658,11 @@ public class Chessboard implements Serializable {
             g2.drawString(label, x, yBottom);
             g2.drawString(label, x, yTop);
         }
+        // Reihenbeschriftung: Visual von unten (1) bis oben (8)
         for (int row = 0; row < MAX_ROW; row++) {
-            String label = String.valueOf(MAX_ROW - row);
-            int y = margin + row * SQUARE_SIZE + SQUARE_SIZE / 2 + 5;
+            // Da board[0] unten ist, entspricht row 0 -> 1, row 7 -> 8
+            String label = String.valueOf(row + 1);
+            int y = margin + (MAX_ROW - 1 - row) * SQUARE_SIZE + SQUARE_SIZE / 2 + 5;
             int xRight = margin + boardSize + 5;
             int xLeft = margin - 20;
             g2.drawString(label, xRight, y);

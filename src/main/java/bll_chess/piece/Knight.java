@@ -5,57 +5,41 @@ package main.java.bll_chess.piece;
  */
 public class Knight extends Piece {
 
-    /**
-     * Konstruktor für den Springer.
-     * 
-     * @param color Die Farbe des Springers (0 = weiß, 1 = schwarz)
-     * @param col   Die Spalte, in der der Springer steht
-     * @param row   Die Zeile, in der der Springer steht
-     */
     public Knight(int color, int col, int row) {
         super(color, col, row);
     }
-    
-    /**
-     * Überprüft, ob ein geplanter Zug des Springers gültig ist.
-     * 
-     * Der Springer bewegt sich in einem "L"-förmigen Muster: zwei Felder in eine Richtung und
-     * dann ein Feld in die senkrechte Richtung.
-     * 
-     * @param newCol Zielspalte
-     * @param newRow Zielzeile
-     * @param board  Das Schachbrett als 2D-Array von Piece-Objekten
-     * @return true, wenn der Zug gültig ist, sonst false
-     */
+
     @Override
     public boolean isValidMove(int newCol, int newRow, Piece[][] board) {
-        // Berechne die absolute Differenz in Spalte und Zeile zwischen aktueller Position und Zielposition
+        // 1. Prüfe, ob das Zielfeld innerhalb des Bretts liegt
+        if (!isInBounds(newCol, newRow)) {
+            return false;
+        }
+
+        // 2. Prüfe L-förmige Bewegung (2-1 Muster)
         int dCol = Math.abs(newCol - col);
         int dRow = Math.abs(newRow - row);
-        
-        // Überprüfe, ob der Zug den L-förmigen Bewegungsregeln des Springers entspricht
         if (!((dCol == 2 && dRow == 1) || (dCol == 1 && dRow == 2))) {
             return false;
         }
-        
-        // Überprüfe, ob am Ziel ein Piece steht
-        Piece target = board[newRow][newCol];
-        if (target != null) {
-            // Falls das Ziel von einer eigenen Figur besetzt ist, ist der Zug ungültig
-            if (target.getColor() == this.color) {
-                return false;
-            }
-        }
-        return true;
+
+        // 3. Springer kann über andere Figuren springen - nur Zielfeld prüfen
+        return isValidTarget(board[newRow][newCol]);
     }
 
-    /**
-     * Gibt den Pfad zum Bild des Springers zurück.
-     * 
-     * @return String mit dem Bildpfad, abhängig von der Farbe des Springers
-     */
+    private boolean isInBounds(int col, int row) {
+        // Brettgrenzen: 0-7 für beide Koordinaten
+        return col >= 0 && col < 8 && row >= 0 && row < 8;
+    }
+
+    private boolean isValidTarget(Piece target) {
+        // Zielfeld muss leer oder gegnerische Figur sein
+        return target == null || target.getColor() != this.color;
+    }
+
     @Override
     protected String getImagePath() {
+        // Pfade zu den Bildern (unverändert)
         return color == 0 ? "whiteKnight" : "blackKnight";
     }
 }

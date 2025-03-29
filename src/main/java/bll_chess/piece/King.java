@@ -6,50 +6,54 @@ public class King extends Piece {
     public King(int color, int col, int row) {
         super(color, col, row);
     }
-    
+
     @Override
     public boolean isValidMove(int newCol, int newRow, Piece[][] board) {
+        if (!isInBounds(newCol, newRow)) return false;
+        
         int dCol = Math.abs(newCol - col);
         int dRow = Math.abs(newRow - row);
-        
-        // Normale Bewegung: ein Feld in jede Richtung
-        if (dCol <= 1 && dRow <= 1) {
-            Piece target = board[newRow][newCol];
-            return (target == null || target.getColor() != this.color);
+
+        // Normale Königszüge (1 Feld in alle Richtungen)
+        if ((dCol <= 1 && dRow <= 1) && !(dCol == 0 && dRow == 0)) {
+            return isValidTarget(board[newRow][newCol]);
         }
-        
-        // Rochade: Zwei Felder horizontal (dRow == 0 und dCol == 2)
-        if (dRow == 0 && dCol == 2) {
-            if (hasMoved) return false; // Der König darf sich noch nicht bewegt haben
-            
-            int rookCol = (newCol > col) ? 7 : 0; // Bestimme die Spalte des Turms (0 oder 7)
-            Piece rookPiece = board[row][rookCol];
-            
-            // Überprüfen, ob an der Turmposition tatsächlich ein Turm steht
-            if (!(rookPiece instanceof Rook)) return false;
-            Rook rook = (Rook) rookPiece;
-            
-            // Turm darf sich ebenfalls noch nicht bewegt haben
-            if (rook.hasMoved()) return false;
-            
-            // Überprüfen, ob alle Felder zwischen König und Turm frei sind
-            int step = (rookCol == 7) ? 1 : -1;
-            for (int c = col + step; c != rookCol; c += step) {
-                if (board[row][c] != null) return false; // Ein Feld ist besetzt
-            }
-            
-            // Überprüfen, ob der König während der Rochade nicht im Schach steht oder durch ein bedrohtes Feld zieht
-            if (isPathUnderCheck(newCol, board)) return false;
-            if (isSquareUnderAttack(col + step, row, board) || isSquareUnderAttack(newCol - step, row, board)) {
-                return false;
-            }
-            
-            return true;
+
+        // Rochade (nur wenn König nicht bewegt)
+        if (dRow == 0 && dCol == 2 && !hasMoved) {
+            return isValidCastling(newCol, board);
         }
-        
+
         return false;
     }
-    
+
+    private boolean isValidCastling(int newCol, Piece[][] board) {
+        int rookCol = (newCol > col) ? 7 : 0; // Turmposition
+        int step = (newCol > col) ? 1 : -1;   // Bewegungsrichtung
+        
+        // 1. Prüfe Turm
+        Piece rook = board[row][rookCol];
+        if (!(rook instanceof Rook) || ((Rook) rook).hasMoved()) {
+            return false;
+        }
+
+        // 2. Prüfe freie Felder zwischen König und Turm
+        for (int c = col + step; c != rookCol; c += step) {
+            if (board[row][c] != null) return false;
+        }
+
+        // 3. Prüfe, ob König im Schach steht oder bedrohte Felder passiert
+        if (isInCheck(board) || isPathUnderAttack(newCol, board)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isValidTarget(Piece target) {
+        return target == null || target.getColor() != color;
+    }
+
     @Override
     protected String getImagePath() {
         return color == 0 ? "whiteKing" : "blackKing";
@@ -63,24 +67,12 @@ public class King extends Piece {
         return hasMoved;
     }
 
-    // Überprüft, ob der König im Schach steht
     public boolean isInCheck(Piece[][] board) {
-        for (Piece[] boardRow : board) {
-            for (Piece piece : boardRow) {
-                if (piece != null && piece.getColor() != this.color &&
-                    piece.isValidMove(this.col, this.row, board)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    // Überprüft, ob ein bestimmtes Feld von einer gegnerischen Figur angegriffen wird
-    private boolean isSquareUnderAttack(int col, int row, Piece[][] board) {
-        for (Piece[] rowPieces : board) {
-            for (Piece piece : rowPieces) {
-                if (piece != null && piece.getColor() != this.color) {
+        // Prüfe alle gegnerischen Figuren
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece piece = board[r][c];
+                if (piece != null && piece.getColor() != color) {
                     if (piece.isValidMove(col, row, board)) {
                         return true;
                     }
@@ -90,33 +82,43 @@ public class King extends Piece {
         return false;
     }
 
-    // Überprüft, ob der König schachmatt ist
-    public boolean isCheckmate(Piece[][] board) {
-        if (!isInCheck(board)) return false;
-
-        // Prüfe, ob der König sich mit einem Zug aus dem Schach befreien kann
-        for (int colShift = -1; colShift <= 1; colShift++) {
-            for (int rowShift = -1; rowShift <= 1; rowShift++) {
-                int newCol = col + colShift;
-                int newRow = row + rowShift;
-                if (isInBounds(newCol, newRow) && isValidMove(newCol, newRow, board)) {
-                    return false; // König kann sich befreien
+    private boolean isSquareUnderAttack(int col, int row, Piece[][] board) {
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece piece = board[r][c];
+                if (piece != null && piece.getColor() != color) {
+                    if (piece.isValidMove(col, row, board)) {
+                        return true;
+                    }
                 }
             }
         }
-        return true; // Keine Möglichkeit, dem Schach zu entkommen (Schachmatt)
+        return false;
     }
 
-    // Hilfsmethode zur Überprüfung, ob eine Position innerhalb des Schachbretts liegt
+    public boolean isCheckmate(Piece[][] board) {
+        if (!isInCheck(board)) return false;
+
+        // Prüfe alle möglichen Königszüge
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                int newCol = col + dx;
+                int newRow = row + dy;
+                if (isValidMove(newCol, newRow, board) && !isSquareUnderAttack(newCol, newRow, board)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     private boolean isInBounds(int col, int row) {
         return col >= 0 && col < 8 && row >= 0 && row < 8;
     }
 
-    // Überprüft, ob der Pfad des Königs während der Rochade bedroht ist
-    private boolean isPathUnderCheck(int newCol, Piece[][] board) {
+    private boolean isPathUnderAttack(int newCol, Piece[][] board) {
         int step = (newCol > col) ? 1 : -1;
-        // Überprüfe die Felder, über die der König während der Rochade zieht
-        for (int c = col + step; c != newCol; c += step) {
+        for (int c = col; c != newCol + step; c += step) {
             if (isSquareUnderAttack(c, row, board)) {
                 return true;
             }

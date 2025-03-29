@@ -40,11 +40,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     
     // Das Schachbrett-Objekt, welches die Spiellogik enthält
     private Chessboard chessboard;
-    // ArduinoConnector, um Daten vom Arduino zu empfangen
-    private ArduinoConnector arduino;
-
     // Zähler für den PNG-Export
     private int exportCount = 1;
+    
+    // Hier wird der vorherige Sensorzustand gespeichert (64 Felder)
+    private int[] previousSensorValues = new int[64];
 
     /**
      * Konstruktor des GamePanel.
@@ -58,54 +58,60 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         setFocusable(true);
         addKeyListener(this);
         
-        // Initialisiere den ArduinoConnector (Passe den Portnamen an deine Umgebung an, z.B. "COM3")
-        arduino = new ArduinoConnector("COM6");
-        // Registriere einen Listener, der empfangene Daten verarbeitet
-        arduino.setDataListener(data -> {
-            chessboard.processSensorData(data);
-        });
+        // Initialisiere die Sensorwerte mit 0
+        for (int i = 0; i < 64; i++) {
+            previousSensorValues[i] = 0;
+        }
         
+        // Initialisiere den ArduinoConnector (Passe den Portnamen an deine Umgebung an, z.B. "COM6")
+        new ArduinoConnector("COM6", this);
     }
 
     /**
      * Verarbeitet die vom Arduino empfangenen Daten.
-     * Erwartet wird ein String im Format: fromRow,fromCol,toRow,toCol
+     * Erwartet wird ein String im Format:
+     * "START,<v0>,<v1>,...,<v63>,END"
+     * 
+     * Bei genau zwei unterschiedlichen Sensorwerten wird ein Zug angenommen.
      *
-     * @param data Die empfangenen Daten als String
-   
-
-    /**
-     * Prüft, ob der angegebene Zug ein En-Passant-Zug ist.
-     * Hierzu wird überprüft, ob der bewegende Bauer diagonal zieht und
-     * der benachbarte gegnerische Bauer für En Passant anfällig ist.
-     *
-     * @param movingPiece Die ziehende Figur
-     * @param toRow       Zielreihe
-     * @param toCol       Zielspalte
-     * @return true, wenn es sich um einen En-Passant-Zug handelt, sonst false
+     * @param data Die empfangenen Daten als String.
      */
-    private boolean isEnPassantMove(Piece movingPiece, int toRow, int toCol) {
-        if (!(movingPiece instanceof Pawn)) {
-            return false;
-        }
-        Pawn pawn = (Pawn) movingPiece;
-        int currentRow = pawn.getRow();
-        int currentCol = pawn.getCol();
+    public void processSensorData(String data) {
+        data = data.trim();
         
-        // Prüfe, ob diagonal gezogen wird (ein Feld)
-        if (Math.abs(toCol - currentCol) == 1 && toRow == currentRow + pawn.getDirection()) {
-            // Hole den benachbarten Gegnerbauern
-            Piece opponentPiece = chessboard.getBoard()[currentRow][toCol];
-            if (opponentPiece instanceof Pawn) {
-                Pawn opponentPawn = (Pawn) opponentPiece;
-                // En Passant ist möglich, wenn der gegnerische Bauer gerade den Doppelschritt gemacht hat
-                // und auf der gleichen Reihe steht
-                if (opponentPawn.isEnPassantEligible() && opponentPawn.getRow() == currentRow) {
-                    return true;
-                }
-            }
+        // Validiere das Datenformat
+        if (!data.startsWith("START,") || !data.endsWith(",END")) {
+            System.out.println("Ungültiges Datenformat: " + data);
+            return;
         }
-        return false;
+        
+        // Entferne "START," und ",END"
+        String inner = data.substring(6, data.length() - 4);
+        String[] parts = inner.split(",");
+        
+        // Erwarte 4 Werte: FromRow, FromCol, ToRow, ToCol
+        if (parts.length != 4) {
+            System.out.println("Erwartet 4 Werte (FromRow,FromCol,ToRow,ToCol), erhalten: " + parts.length);
+            return;
+        }
+        
+        try {
+            // Konvertiere die Werte in Integer
+            int fromRow = Integer.parseInt(parts[0].trim());
+            int fromCol = parts[1].trim().charAt(0) - 'A'; // Spalte A=0, B=1, etc.
+            int toRow = Integer.parseInt(parts[2].trim());
+            int toCol = parts[3].trim().charAt(0) - 'A';
+            
+            // Konvertiere visuelle Reihen (1-8) in interne Reihen (0-7)
+            int internalFromRow = 8 - fromRow;
+            int internalToRow = 8 - toRow;
+            
+            // Verarbeite den Zug
+            processMove(internalFromRow, fromCol, internalToRow, toCol);
+            
+        } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+            System.err.println("Fehler beim Parsen der Zugdaten: " + e.getMessage());
+        }
     }
 
     /**
@@ -183,6 +189,40 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         resetInvalidState();
         // Starte die Zug-Animation
         animateMove(movingPiece, fromRow, fromCol, toRow, toCol, false);
+    }
+
+    /**
+     * Prüft, ob der angegebene Zug ein En-Passant-Zug ist.
+     * Hierzu wird überprüft, ob der bewegende Bauer diagonal zieht und
+     * der benachbarte gegnerische Bauer für En Passant anfällig ist.
+     *
+     * @param movingPiece Die ziehende Figur
+     * @param toRow       Zielreihe
+     * @param toCol       Zielspalte
+     * @return true, wenn es sich um einen En-Passant-Zug handelt, sonst false
+     */
+    private boolean isEnPassantMove(Piece movingPiece, int toRow, int toCol) {
+        if (!(movingPiece instanceof Pawn)) {
+            return false;
+        }
+        Pawn pawn = (Pawn) movingPiece;
+        int currentRow = pawn.getRow();
+        int currentCol = pawn.getCol();
+        
+        // Prüfe, ob diagonal gezogen wird (ein Feld)
+        if (Math.abs(toCol - currentCol) == 1 && toRow == currentRow + pawn.getDirection()) {
+            // Hole den benachbarten Gegnerbauern
+            Piece opponentPiece = chessboard.getBoard()[currentRow][toCol];
+            if (opponentPiece instanceof Pawn) {
+                Pawn opponentPawn = (Pawn) opponentPiece;
+                // En Passant ist möglich, wenn der gegnerische Bauer gerade den Doppelschritt gemacht hat
+                // und auf der gleichen Reihe steht
+                if (opponentPawn.isEnPassantEligible() && opponentPawn.getRow() == currentRow) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

@@ -8,43 +8,38 @@ public class Bishop extends Piece {
 
     @Override
     public boolean isValidMove(int newCol, int newRow, Piece[][] board) {
-        // 1. Prüfe, ob die eigenen (Start-)Koordinaten gültig sind.
-        if (this.col < 0 || this.col >= 8 || this.row < 0 || this.row >= 8) {
+        // 1. Prüfe, ob Start- und Zielfeld identisch sind
+        if (col == newCol && row == newRow) {
             return false;
         }
-        // 2. Prüfe, ob das Zielfeld innerhalb des Bretts liegt.
-        if (newCol < 0 || newCol >= 8 || newRow < 0 || newRow >= 8) {
-            return false;
-        }
-        
+
+        // 2. Prüfe, ob die Bewegung diagonal erfolgt (Δx = ±Δy)
         int dCol = Math.abs(newCol - col);
         int dRow = Math.abs(newRow - row);
-        // Der Läufer bewegt sich nur diagonal: dCol muss gleich dRow sein.
         if (dCol != dRow) {
             return false;
         }
-        
-        int colStep = (newCol - col) > 0 ? 1 : -1;
-        int rowStep = (newRow - row) > 0 ? 1 : -1;
+
+        // 3. Bestimme die Schrittrichtung
+        int colStep = Integer.compare(newCol, col); // +1 (rechts), -1 (links)
+        int rowStep = Integer.compare(newRow, row);  // +1 (nach "unten" in der internen Darstellung)
+
+        // 4. Überprüfe alle Felder entlang der Diagonalen (exklusive Start- und Zielfeld)
         int currentCol = col + colStep;
         int currentRow = row + rowStep;
         
-        // 3. Überprüfe alle Felder entlang der Diagonalen bis zum Ziel.
-        while (currentCol != newCol && currentRow != newRow) {
-            // Überprüfe, ob currentRow/currentCol innerhalb des Brettes liegen.
-            if (currentRow < 0 || currentRow >= 8 || currentCol < 0 || currentCol >= 8) {
-                return false;
-            }
+        while (currentCol != newCol || currentRow != newRow) {
+            // Blockade durch andere Figur?
             if (board[currentRow][currentCol] != null) {
                 return false;
             }
             currentCol += colStep;
             currentRow += rowStep;
         }
-        
-        // 4. Prüfe das Zielfeld: Entweder leer oder enthält eine gegnerische Figur.
+
+        // 5. Zielfeld: Leer oder gegnerische Figur
         Piece target = board[newRow][newCol];
-        return (target == null || target.getColor() != this.color);
+        return target == null || target.getColor() != this.color;
     }
 
     @Override
