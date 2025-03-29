@@ -25,7 +25,7 @@ public class ArduinoConnector {
             
             serialPort = SerialPort.getCommPort(portName);
             serialPort.setBaudRate(115200);
-            serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 1000, 0);
+            serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING,  1000, 0);
             
             boolean opened = serialPort.openPort();
             if (!opened) {

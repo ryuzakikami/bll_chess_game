@@ -44,6 +44,6 @@ public class Bishop extends Piece {
 
     @Override
     protected String getImagePath() {
-        return color == 0 ? "whiteBishop" : "blackBishop";
+        return color == 1 ? "whiteBishop" : "blackBishop";
     }
 }

@@ -41,7 +41,7 @@ public class Rook extends Piece {
 
     @Override
     protected String getImagePath() {
-        return color == 0 ? "whiteRook" : "blackRook";
+        return color == 1 ? "whiteRook" : "blackRook";
     }
 
     // --- Rochade-Logik ---

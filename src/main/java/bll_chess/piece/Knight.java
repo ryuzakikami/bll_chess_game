@@ -40,6 +40,6 @@ public class Knight extends Piece {
     @Override
     protected String getImagePath() {
         // Pfade zu den Bildern (unverändert)
-        return color == 0 ? "whiteKnight" : "blackKnight";
+        return color == 1 ? "whiteKnight" : "blackKnight";
     }
 }

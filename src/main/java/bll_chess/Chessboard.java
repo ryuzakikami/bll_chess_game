@@ -86,31 +86,31 @@ public class Chessboard implements Serializable {
      */
     private void placePieces(int whiteRow, int whitePawnRow, int blackRow, int blackPawnRow) {
         // Weiße Figuren (untere Reihe, board[0])
-        board[whiteRow][0] = new Rook(0, 0, whiteRow);
-        board[whiteRow][1] = new Knight(0, 1, whiteRow);
-        board[whiteRow][2] = new Bishop(0, 2, whiteRow);
-        board[whiteRow][3] = new Queen(0, 3, whiteRow);
-        board[whiteRow][4] = new King(0, 4, whiteRow);
-        board[whiteRow][5] = new Bishop(0, 5, whiteRow);
-        board[whiteRow][6] = new Knight(0, 6, whiteRow);
-        board[whiteRow][7] = new Rook(0, 7, whiteRow);
+        board[whiteRow][0] = new Rook(1, 0, whiteRow);
+        board[whiteRow][1] = new Knight(1, 1, whiteRow);
+        board[whiteRow][2] = new Bishop(1, 2, whiteRow);
+        board[whiteRow][3] = new Queen(1, 3, whiteRow);
+        board[whiteRow][4] = new King(1, 4, whiteRow);
+        board[whiteRow][5] = new Bishop(1, 5, whiteRow);
+        board[whiteRow][6] = new Knight(1, 6, whiteRow);
+        board[whiteRow][7] = new Rook(1, 7, whiteRow);
         // Weiße Bauern in board[1]
         for (int col = 0; col < MAX_COL; col++) {
-            board[whitePawnRow][col] = new Pawn(0, col, whitePawnRow);
+            board[whitePawnRow][col] = new Pawn(1, col, whitePawnRow);
         }
 
         // Schwarze Figuren (obere Reihe, board[7])
-        board[blackRow][0] = new Rook(1, 0, blackRow);
-        board[blackRow][1] = new Knight(1, 1, blackRow);
-        board[blackRow][2] = new Bishop(1, 2, blackRow);
-        board[blackRow][3] = new Queen(1, 3, blackRow);
-        board[blackRow][4] = new King(1, 4, blackRow);
-        board[blackRow][5] = new Bishop(1, 5, blackRow);
-        board[blackRow][6] = new Knight(1, 6, blackRow);
-        board[blackRow][7] = new Rook(1, 7, blackRow);
+        board[blackRow][0] = new Rook(0, 0, blackRow);
+        board[blackRow][1] = new Knight(0, 1, blackRow);
+        board[blackRow][2] = new Bishop(0, 2, blackRow);
+        board[blackRow][3] = new Queen(0, 3, blackRow);
+        board[blackRow][4] = new King(0, 4, blackRow);
+        board[blackRow][5] = new Bishop(0, 5, blackRow);
+        board[blackRow][6] = new Knight(0, 6, blackRow);
+        board[blackRow][7] = new Rook(0, 7, blackRow);
         // Schwarze Bauern in board[6]
         for (int col = 0; col < MAX_COL; col++) {
-            board[blackPawnRow][col] = new Pawn(1, col, blackPawnRow);
+            board[blackPawnRow][col] = new Pawn(0, col, blackPawnRow);
         }
     }
 
@@ -440,8 +440,9 @@ public class Chessboard implements Serializable {
      */
     public void switchPlayer() {
         currentPlayer = (currentPlayer == 0) ? 1 : 0;
+        System.out.println("[DEBUG] Spieler gewechselt → Neuer Spieler: " 
+            + (currentPlayer == 0 ? "Weiß" : "Schwarz"));
     }
-
     /**
      * Überprüft, ob der übergebene Zug vom richtigen Spieler ausgeführt wird.
      *

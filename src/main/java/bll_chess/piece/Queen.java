@@ -70,6 +70,6 @@ public class Queen extends Piece {
 
     @Override
     protected String getImagePath() {
-        return color == 0 ? "whiteQueen" : "blackQueen";
+        return color == 1 ? "whiteQueen" : "blackQueen";
     }
 }

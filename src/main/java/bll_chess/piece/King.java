@@ -56,7 +56,7 @@ public class King extends Piece {
 
     @Override
     protected String getImagePath() {
-        return color == 0 ? "whiteKing" : "blackKing";
+        return color == 1 ? "whiteKing" : "blackKing";
     }
 
     public void markAsMoved() {
