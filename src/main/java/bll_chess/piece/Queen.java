@@ -1,8 +1,8 @@
 package main.java.bll_chess.piece;
 
 /**
- * Die Klasse Queen repräsentiert die Dame im Schach.
- * Sie kombiniert die Bewegungsmöglichkeiten von Turm und Läufer.
+ * Die Klasse Queen repraesentiert die Dame im Schach.
+ * Sie kombiniert die Bewegungsmoeglichkeiten von Turm und Laeufer.
  */
 public class Queen extends Piece {
 
@@ -12,7 +12,7 @@ public class Queen extends Piece {
 
     @Override
     public boolean isValidMove(int newCol, int newRow, Piece[][] board) {
-        // 1. Prüfe, ob das Zielfeld innerhalb des Bretts liegt
+        // 1. Pruefe, ob das Zielfeld innerhalb des Bretts liegt
         if (newCol < 0 || newCol >= 8 || newRow < 0 || newRow >= 8) {
             return false;
         }
@@ -20,12 +20,12 @@ public class Queen extends Piece {
         int dCol = Math.abs(newCol - col);
         int dRow = Math.abs(newRow - row);
 
-        // 2. Prüfe Turm-Bewegung (gerade Linie)
+        // 2. Pruefe Turm-Bewegung (gerade Linie)
         if (col == newCol || row == newRow) {
             return checkStraightLine(newCol, newRow, board);
         }
 
-        // 3. Prüfe Läufer-Bewegung (diagonale Linie)
+        // 3. Pruefe Laeufer-Bewegung (diagonale Linie)
         if (dCol == dRow) {
             return checkDiagonalLine(newCol, newRow, board);
         }

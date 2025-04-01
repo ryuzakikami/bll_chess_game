@@ -1,7 +1,7 @@
 package main.java.bll_chess.piece;
 
 /**
- * Die Klasse Knight repräsentiert den Springer im Schach.
+ * Die Klasse Knight repraesentiert den Springer im Schach.
  */
 public class Knight extends Piece {
 
@@ -39,7 +39,6 @@ public class Knight extends Piece {
 
     @Override
     protected String getImagePath() {
-        // Pfade zu den Bildern (unverändert)
         return color == 1 ? "whiteKnight" : "blackKnight";
     }
 }

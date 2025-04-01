@@ -14,12 +14,12 @@ public class King extends Piece {
         int dCol = Math.abs(newCol - col);
         int dRow = Math.abs(newRow - row);
 
-        // Normale Königszüge (1 Feld in alle Richtungen)
+        // Normale Koenigszuege (1 Feld in alle Richtungen)
         if ((dCol <= 1 && dRow <= 1) && !(dCol == 0 && dRow == 0)) {
             return isValidTarget(board[newRow][newCol]);
         }
 
-        // Rochade (nur wenn König nicht bewegt)
+        // Rochade (nur wenn Koenig nicht bewegt)
         if (dRow == 0 && dCol == 2 && !hasMoved) {
             return isValidCastling(newCol, board);
         }
@@ -31,18 +31,18 @@ public class King extends Piece {
         int rookCol = (newCol > col) ? 7 : 0; // Turmposition
         int step = (newCol > col) ? 1 : -1;   // Bewegungsrichtung
         
-        // 1. Prüfe Turm
+        // 1. Pruefe Turm
         Piece rook = board[row][rookCol];
         if (!(rook instanceof Rook) || ((Rook) rook).hasMoved()) {
             return false;
         }
 
-        // 2. Prüfe freie Felder zwischen König und Turm
+        // 2. Pruefe freie Felder zwischen Koenig und Turm
         for (int c = col + step; c != rookCol; c += step) {
             if (board[row][c] != null) return false;
         }
 
-        // 3. Prüfe, ob König im Schach steht oder bedrohte Felder passiert
+        // 3. Pruefe, ob Koenig im Schach steht oder bedrohte Felder passiert
         if (isInCheck(board) || isPathUnderAttack(newCol, board)) {
             return false;
         }
@@ -68,7 +68,7 @@ public class King extends Piece {
     }
 
     public boolean isInCheck(Piece[][] board) {
-        // Prüfe alle gegnerischen Figuren
+        // Pruefe alle gegnerischen Figuren
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 Piece piece = board[r][c];
@@ -99,7 +99,7 @@ public class King extends Piece {
     public boolean isCheckmate(Piece[][] board) {
         if (!isInCheck(board)) return false;
 
-        // Prüfe alle möglichen Königszüge
+        // Prüfe alle moeglichen Koenigszuege
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
                 int newCol = col + dx;

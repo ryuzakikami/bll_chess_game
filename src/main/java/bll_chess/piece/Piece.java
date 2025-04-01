@@ -6,23 +6,23 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
- * Abstrakte Basisklasse für alle Schachfiguren.
+ * Abstrakte Basisklasse fuer alle Schachfiguren.
  */
 public abstract class Piece {
     protected BufferedImage image;  // Bild der Figur
-    protected int color;            // Farbe der Figur (0 = weiß, 1 = schwarz)
+    protected int color;            // Farbe der Figur (0 = weiss, 1 = schwarz)
     protected int col;              // Spalte der Figur
     protected int row;              // Zeile der Figur
 
-    // Zusätzliche Felder für Animationseffekte
+    // Zusaetzliche Felder fuer Animationseffekte
     protected int animOffsetX = 0;
     protected int animOffsetY = 0;
 
     /**
-     * Konstruktor für eine Schachfigur.
-     * Lädt das entsprechende Bild der Figur.
+     * Konstruktor fuer eine Schachfigur.
+     * Laedt das entsprechende Bild der Figur.
      * 
-     * @param color Farbe der Figur (0 = weiß, 1 = schwarz)
+     * @param color Farbe der Figur (0 = weiss, 1 = schwarz)
      * @param col   Startspalte
      * @param row   Startzeile
      */
@@ -35,14 +35,14 @@ public abstract class Piece {
 
     /**
      * Abstrakte Methode, die von Unterklassen implementiert wird,
-     * um den spezifischen Bildpfad der Figur zurückzugeben.
+     * um den spezifischen Bildpfad der Figur zurueckzugeben.
      * 
      * @return Der Bildpfad als String
      */
     protected abstract String getImagePath();
 
     /**
-     * Lädt das Bild der Figur aus dem Ressourcenverzeichnis.
+     * Laedt das Bild der Figur aus dem Ressourcenverzeichnis.
      * 
      * @param imgPath Pfad zum Bild (ohne Dateiendung)
      * @return BufferedImage des geladenen Bildes oder null, falls nicht gefunden
@@ -64,11 +64,11 @@ public abstract class Piece {
     }  
 
     /**
-     * Spielt den Zug-Sound ab, abhängig von der Farbe der Figur.
+     * Spielt den Zug-Sound ab, abhaengig von der Farbe der Figur.
      */
     public void playMoveSound() {
         // Nutze die Sound-Klasse, um den entsprechenden Zug-Sound abzuspielen
-        if (color == 0) {  // Weiß
+        if (color == 0) {  // Weiss
             Sound.play(Sound.SoundType.WHITE_MOVE);
         } else {  // Schwarz
             Sound.play(Sound.SoundType.BLACK_MOVE);
@@ -76,11 +76,11 @@ public abstract class Piece {
     }
 
     /**
-     * Spielt den Schlag-Sound ab, abhängig von der Farbe der Figur.
+     * Spielt den Schlag-Sound ab, abhaengig von der Farbe der Figur.
      */
     public void playCaptureSound() {
         // Nutze die Sound-Klasse, um den entsprechenden Schlag-Sound abzuspielen
-        if (color == 0) {  // Weiß
+        if (color == 0) {  // Weiss
             Sound.play(Sound.SoundType.WHITE_TAKES);
         } else {  // Schwarz
             Sound.play(Sound.SoundType.BLACK_CAPTURES);
@@ -88,7 +88,7 @@ public abstract class Piece {
     }
 
     /**
-     * Gibt das Bild der Figur zurück.
+     * Gibt das Bild der Figur zurueck.
      * 
      * @return BufferedImage des Bildes
      */
@@ -99,7 +99,7 @@ public abstract class Piece {
     /**
      * Berechnet die x-Koordinate auf dem Bildschirm, basierend auf der Spalte und Animations-Offset.
      * 
-     * @param squareSize Größe eines Schachbrettfeldes in Pixeln
+     * @param squareSize Groesse eines Schachbrettfeldes in Pixeln
      * @return x-Koordinate in Pixeln
      */
     public int getX(int squareSize) {
@@ -109,7 +109,7 @@ public abstract class Piece {
     /**
      * Berechnet die y-Koordinate auf dem Bildschirm, basierend auf der Zeile und Animations-Offset.
      * 
-     * @param squareSize Größe eines Schachbrettfeldes in Pixeln
+     * @param squareSize Groesse eines Schachbrettfeldes in Pixeln
      * @return y-Koordinate in Pixeln
      */
     public int getY(int squareSize) {
@@ -117,7 +117,7 @@ public abstract class Piece {
     }
 
     /**
-     * Setzt den Animationsversatz (Offset) für die Darstellung der Figur.
+     * Setzt den Animationsversatz (Offset) fuer die Darstellung der Figur.
      * 
      * @param offsetX Versatz in x-Richtung
      * @param offsetY Versatz in y-Richtung
@@ -127,7 +127,7 @@ public abstract class Piece {
         this.animOffsetY = offsetY;
     }
 
-    // Getter und Setter für Spalte, Zeile und Farbe
+    // Getter und Setter fuer Spalte, Zeile und Farbe
     public int getCol() {
         return col;
     }
@@ -148,20 +148,20 @@ public abstract class Piece {
     }
 
     /**
-     * Abstrakte Methode, die in den Unterklassen implementiert werden muss, um zu prüfen,
-     * ob ein Zug an eine neue Position gültig ist.
+     * Abstrakte Methode, die in den Unterklassen implementiert werden muss, um zu pruefen,
+     * ob ein Zug an eine neue Position gueltig ist.
      * 
      * @param newCol Zielspalte
      * @param newRow Zielzeile
      * @param board  Das Schachbrett als 2D-Array von Piece-Objekten
-     * @return true, wenn der Zug gültig ist, sonst false
+     * @return true, wenn der Zug gueltig ist, sonst false
      */
     public abstract boolean isValidMove(int newCol, int newRow, Piece[][] board);
 
     /**
-     * Überprüft, ob die angegebene Figur dieselbe Farbe wie diese Figur hat.
+     * Ueberprueft, ob die angegebene Figur dieselbe Farbe wie diese Figur hat.
      * 
-     * @param targetPiece Die zu überprüfende Figur
+     * @param targetPiece Die zu ueberpruefende Figur
      * @return true, wenn beide Figuren dieselbe Farbe haben, sonst false
      */
     public boolean isSameColor(Piece targetPiece) {
@@ -169,9 +169,9 @@ public abstract class Piece {
     }
 
     /**
-     * Überprüft, ob auf dem Weg zwischen zwei Feldern eine Figur steht.
+     * Ueberprueft, ob auf dem Weg zwischen zwei Feldern eine Figur steht.
      * 
-     * Dies wird z.B. bei Figuren wie Dame, Turm und Läufer genutzt, die auf ihrem Weg nicht übersprungen werden dürfen.
+     * Dies wird z.B. bei Figuren wie Dame, Turm und Laeufer genutzt, die auf ihrem Weg nicht uebersprungen werden duerfen.
      * 
      * @param startCol Startspalte
      * @param startRow Startzeile

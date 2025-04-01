@@ -8,12 +8,12 @@ public class Bishop extends Piece {
 
     @Override
     public boolean isValidMove(int newCol, int newRow, Piece[][] board) {
-        // 1. Prüfe, ob Start- und Zielfeld identisch sind
+        // 1. Pruefe, ob Start- und Zielfeld identisch sind
         if (col == newCol && row == newRow) {
             return false;
         }
 
-        // 2. Prüfe, ob die Bewegung diagonal erfolgt (Δx = ±Δy)
+        // 2. Pruefe, ob die Bewegung diagonal erfolgt (Δx = ±Δy)
         int dCol = Math.abs(newCol - col);
         int dRow = Math.abs(newRow - row);
         if (dCol != dRow) {
@@ -24,7 +24,7 @@ public class Bishop extends Piece {
         int colStep = Integer.compare(newCol, col); // +1 (rechts), -1 (links)
         int rowStep = Integer.compare(newRow, row);  // +1 (nach "unten" in der internen Darstellung)
 
-        // 4. Überprüfe alle Felder entlang der Diagonalen (exklusive Start- und Zielfeld)
+        // 4. Ueberpruefe alle Felder entlang der Diagonalen (außer Start- und Zielfeld)
         int currentCol = col + colStep;
         int currentRow = row + rowStep;
         

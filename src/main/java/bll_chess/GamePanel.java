@@ -18,29 +18,30 @@ import main.java.bll_chess.piece.Sound;
 import main.java.bll_chess.piece.Sound.SoundType;
 
 /**
- * Die Klasse GamePanel repräsentiert das Spiel-Panel, in dem das Schachbrett
- * gezeichnet und die Spielzüge animiert werden. Zusätzlich werden hier Eingaben
- * verarbeitet, ungültige Züge hervorgehoben, Sounds abgespielt und die aktuelle Stellung
- * als PNG exportiert. Neu: Es werden serielle Daten vom Arduino empfangen, die Züge repräsentieren.
+ * Die Klasse GamePanel repraesentiert das Spiel-Panel, in dem das Schachbrett
+ * gezeichnet und die Spielzuege animiert werden. Zusaetzlich werden hier Eingaben
+ * verarbeitet, gueltige und unguelige Zuege markiert, Soundeffekte abgespielt und
+ * die aktuelle Stellung als PNG exportiert. Neu: Es werden serielle Daten vom Arduino 
+ * empfangen, die Zuege repraesentieren.
  */
 public class GamePanel extends JPanel implements Runnable, KeyListener {
-    // Thread für das Spiel, um kontinuierlich zu aktualisieren
+    // Thread fuer das Spiel, um kontinuierlich zu aktualisieren
     private Thread gameThread;
-    public static final int SQUARE_SIZE = 100;  // Größe eines Schachfeldes in Pixeln
+    public static final int SQUARE_SIZE = 100;  // Groesse eines Schachfeldes in Pixeln
     public static final int MARGIN = Chessboard.MARGIN;  // Abstand um das Brett
     public static final int WIDTH = Chessboard.MAX_COL * SQUARE_SIZE + 2 * MARGIN;  // Gesamtbreite des Panels
-    public static final int HEIGHT = Chessboard.MAX_ROW * SQUARE_SIZE + 2 * MARGIN; // Gesamthöhe des Panels
+    public static final int HEIGHT = Chessboard.MAX_ROW * SQUARE_SIZE + 2 * MARGIN; // Gesamthoehe des Panels
 
-    // Variablen zur Markierung von ungültigen Zügen
+    // Variablen zur Markierung von ungueligen Zuegen
     private int invalidTargetRow = -1;
     private int invalidTargetCol = -1;
     private int originalRow = -1;
     private int originalCol = -1;
     private boolean movesBlocked = false;
     
-    // Das Schachbrett-Objekt, welches die Spiellogik enthält
+    // Das Schachbrett-Objekt, welches die Spiellogik enthaelt
     private Chessboard chessboard;
-    // Zähler für den PNG-Export
+    // Zaehler fuer den PNG-Export
     private int exportCount = 1;
     
     // Hier wird der vorherige Sensorzustand gespeichert (64 Felder)
@@ -48,7 +49,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     /**
      * Konstruktor des GamePanel.
-     * Setzt die bevorzugte Größe, initialisiert das Schachbrett, fügt den KeyListener hinzu
+     * Setzt die bevorzugte Groesse, initialisiert das Schachbrett, fuegt den KeyListener hinzu
      * und startet die serielle Verbindung zum Arduino.
      */
     public GamePanel() {
@@ -72,7 +73,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
      * Erwartet wird ein String im Format:
      * "START,<v0>,<v1>,...,<v63>,END"
      * 
-     * Bei genau zwei unterschiedlichen Sensorwerten wird ein Zug angenommen.
+     * Bei genau vier Werten wird ein Zug angenommen.
      *
      * @param data Die empfangenen Daten als String.
      */
@@ -81,7 +82,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         
         // Validiere das Datenformat
         if (!data.startsWith("START,") || !data.endsWith(",END")) {
-            System.out.println("Ungültiges Datenformat: " + data);
+            System.out.println("Ungueltiges Datenformat: " + data);
             return;
         }
         
@@ -101,8 +102,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             int fromCol = parts[1].trim().charAt(0) - 'A'; // Spalte A=0, B=1, etc.
             int toRow = Integer.parseInt(parts[2].trim());
             int toCol = parts[3].trim().charAt(0) - 'A';
-            
-            // Konvertiere visuelle Reihen (1-8) in interne Reihen (0-7)
             int internalFromRow = 8 - fromRow;
             int internalToRow = 8 - toRow;
             
@@ -116,8 +115,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     /**
      * Verarbeitet einen Zug vom Feld (fromRow, fromCol) zum Feld (toRow, toCol).
-     * Dabei werden diverse Prüfungen (z. B. Spielerzug, ungültige Züge, Schach) durchgeführt,
-     * Animationen gestartet und Sounds abgespielt.
+     * Dabei werden diverse Pruefungen (z. B. Spielerzug, unguelige Zuege, Schach) durchgefuehrt,
+     * Animationen gestartet und Soundeffekte abgespielt.
      *
      * @param fromRow Startreihe
      * @param fromCol Startspalte
@@ -125,9 +124,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
      * @param toCol   Zielspalte
      */
     public void processMove(int fromRow, int fromCol, int toRow, int toCol) {
-        // Falls Züge momentan blockiert sind, abbrechen
+        // Falls Zuege momentan blockiert sind, abbrechen
         if (movesBlocked) {
-            System.out.println("Moves are blocked. Please correct the invalid move first.");
+            System.out.println("Zuege sind blockiert. Bitte korrigiere den ungueligen Zug zuerst.");
             return;
         }
         // Falls gerade eine Bauernumwandlung (Promotion) aussteht, warte auf Abschluss
@@ -138,39 +137,39 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         Piece movingPiece = chessboard.getBoard()[fromRow][fromCol];
         if (movingPiece == null) {
-            System.out.println("processMove: No piece at the source position!");
+            System.out.println("processMove: Keine Figur an der Ausgangsposition gefunden!");
             resetInvalidState();
             repaint();
             return;
         }
 
-        System.out.println("processMove: Moving piece color = " + movingPiece.getColor());
+        System.out.println("processMove: Verschiebe Figur mit Farbe = " + movingPiece.getColor());
         
-        // Prüfe, ob die Figur zum aktuellen Spieler gehört
+        // Pruefe, ob die Figur zum aktuellen Spieler gehoert
         if (!chessboard.isValidTurn(movingPiece)) {
             System.err.println("Falscher Spieler am Zug!");
             return;
         }
 
-        // Prüfe, ob der Zug ein En-Passant-Zug ist
+        // Pruefe, ob der Zug ein En-Passant-Zug ist
         boolean enPassant = isEnPassantMove(movingPiece, toRow, toCol);
         Piece targetPiece = chessboard.getBoard()[toRow][toCol];
-        // Falls es sich nicht um En Passant handelt, führe Standard-Prüfungen durch
+        // Falls es sich nicht um En Passant handelt, fuehre Standard-Pruefungen durch
         if (!enPassant) {
             if (movingPiece.isSameColor(targetPiece) ||
                 !movingPiece.isValidMove(toCol, toRow, chessboard.getBoard())) {
-                // Markiere und animiere einen ungültigen Zug
+                // Markiere und animiere einen ungueligen Zug
                 markInvalidMove(fromRow, fromCol, toRow, toCol);
                 animateMove(movingPiece, fromRow, fromCol, toRow, toCol, true);
-                System.out.println("Invalid move.");
+                System.out.println("Ungueltiger Zug.");
                 return;
             }
         }
         
-        // Prüfe, ob der Zug den König im Schach belässt
+        // Pruefe, ob der Zug den Koenig im Schach belasst
         if (chessboard.isMoveLeavingKingInCheck(fromRow, fromCol, toRow, toCol)) {
             markInvalidMove(fromRow, fromCol, toRow, toCol);
-            System.out.println("Illegal move: Move leaves king in check! Please reverse the move.");
+            System.out.println("Ungueltiger Zug: Zug laesst Koenig im Schach! Bitte Zug rueckgaengig machen.");
             animateMove(movingPiece, fromRow, fromCol, toRow, toCol, true);
             return;
         }
@@ -181,20 +180,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             Sound.play(movingPiece.getColor() == 0 ? SoundType.WHITE_MOVE : SoundType.BLACK_MOVE);
         }
 
-        // Zusätzlicher Sound bei Rochade
+        // Zusatzausgabe: Sound bei Rochade
         if (movingPiece instanceof King && Math.abs(toCol - fromCol) == 2) {
             Sound.play(movingPiece.getColor() == 0 ? SoundType.WHITE_CASTLE : SoundType.BLACK_CASTLE);
         }
-        // Setze die Markierung für ungültige Züge zurück
+        // Setze die Markierung fuer unguelige Zuege zurueck
         resetInvalidState();
         // Starte die Zug-Animation
         animateMove(movingPiece, fromRow, fromCol, toRow, toCol, false);
     }
 
     /**
-     * Prüft, ob der angegebene Zug ein En-Passant-Zug ist.
-     * Hierzu wird überprüft, ob der bewegende Bauer diagonal zieht und
-     * der benachbarte gegnerische Bauer für En Passant anfällig ist.
+     * Prueft, ob der angegebene Zug ein En-Passant-Zug ist.
+     * Hierzu wird geprueft, ob der bewegende Bauer diagonal zieht und
+     * der benachbarte gegnerische Bauer fuer En Passant anfaellig ist.
      *
      * @param movingPiece Die ziehende Figur
      * @param toRow       Zielreihe
@@ -209,13 +208,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int currentRow = pawn.getRow();
         int currentCol = pawn.getCol();
         
-        // Prüfe, ob diagonal gezogen wird (ein Feld)
+        // Pruefe, ob diagonal gezogen wird (ein Feld)
         if (Math.abs(toCol - currentCol) == 1 && toRow == currentRow + pawn.getDirection()) {
-            // Hole den benachbarten Gegnerbauern
+            // Hole den benachbarten Gegnerbauer
             Piece opponentPiece = chessboard.getBoard()[currentRow][toCol];
             if (opponentPiece instanceof Pawn) {
                 Pawn opponentPawn = (Pawn) opponentPiece;
-                // En Passant ist möglich, wenn der gegnerische Bauer gerade den Doppelschritt gemacht hat
+                // En Passant ist moeglich, wenn der gegnerische Bauer gerade den Doppelschritt gemacht hat
                 // und auf der gleichen Reihe steht
                 if (opponentPawn.isEnPassantEligible() && opponentPawn.getRow() == currentRow) {
                     return true;
@@ -227,14 +226,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     /**
      * Animiert den Zug einer Figur von der Start- zur Zielposition.
-     * Dabei werden auch spezielle Animationen für Rochade berücksichtigt.
+     * Dabei werden auch spezielle Animationen fuer Rochade beruecksichtigt.
      *
      * @param movingPiece Die bewegte Figur
      * @param fromRow     Startreihe
      * @param fromCol     Startspalte
      * @param toRow       Zielreihe
      * @param toCol       Zielspalte
-     * @param revert      Flag, ob die Animation rückgängig gemacht werden soll (bei ungültigen Zügen)
+     * @param revert      Flag, ob die Animation rueckgaengig gemacht werden soll (bei ungueligen Zuegen)
      */
     private void animateMove(Piece movingPiece, int fromRow, int fromCol,
                              int toRow, int toCol, boolean revert) {
@@ -246,11 +245,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int deltaX = targetX - startX;
         int deltaY = targetY - startY;
 
-        int frames = 30;  // Anzahl der Animationsframes
-        int delay = 15;   // Verzögerung in Millisekunden zwischen den Frames
+        int frames = 60;  // Anzahl der Animationsframes
+        int delay = 15;   // Verzoegerung in Millisekunden zwischen den Frames
         final int[] frameCount = {0};
 
-        // Prüfe, ob es sich um eine Rochade handelt
+        // Pruefe, ob es sich um eine Rochade handelt
         final boolean isCastling = (movingPiece instanceof King && Math.abs(toCol - fromCol) == 2);
         final Rook castlingRook;
         final int rookFromCol, rookToCol;
@@ -264,7 +263,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             castlingRook = null;
         }
 
-        // Timer für die Animations-Frames
+        // Timer fuer die Animations-Frames
         Timer timer = new Timer(delay, null);
         timer.addActionListener(e -> {
             frameCount[0]++;
@@ -282,12 +281,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 castlingRook.setAnimOffset(rookOffsetX, 0);
             }
 
-            SwingUtilities.invokeLater(this::repaint);
+            SwingUtilities.invokeLater(() -> repaint());
 
             if (frameCount[0] >= frames) {
                 timer.stop();
                 if (!revert) {
-                    // Führe den Zug auf dem Schachbrett aus (und wechsle den Spieler)
+                    // Fuehre den Zug auf dem Schachbrett aus (und wechsle den Spieler)
                     chessboard.movePiece(fromRow, fromCol, toRow, toCol, true);
                     if (isCastling && castlingRook != null) {
                         // Bei Rochade auch den Turm bewegen
@@ -295,19 +294,19 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     }
                     checkGameStatus();
                 }
-                // Setze Animationen zurück
+                // Setze Animationen zurueck
                 movingPiece.setAnimOffset(0, 0);
                 if (isCastling && castlingRook != null) {
                     castlingRook.setAnimOffset(0, 0);
                 }
-                SwingUtilities.invokeLater(this::repaint);
+                SwingUtilities.invokeLater(() -> repaint());
             }
         });
         timer.start();
     }
 
     /**
-     * Prüft den Spielstatus (Schach, Schachmatt, Patt) und spielt ggf. entsprechende Sounds.
+     * Prueft den Spielstatus (Schach, Schachmatt, Patt) und spielt ggf. entsprechende Soundeffekte.
      */
     private void checkGameStatus() {
         SwingUtilities.invokeLater(() -> {
@@ -320,7 +319,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     
                     if (chessboard.isCheckmate(currentPlayer)) {
                         try {
-                            Thread.sleep(500); // Kurze Pause zwischen den Sounds
+                            Thread.sleep(500); // Kurze Pause zwischen den Soundeffekten
                             Sound.play(SoundType.CHECKMATE);
                             Thread.sleep(500);
                             Sound.play(SoundType.GAME_OVER);
@@ -336,7 +335,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     /**
-     * Setzt die Variablen zur Markierung ungültiger Züge zurück.
+     * Setzt die Variablen zur Markierung ungueliger Zuege zurueck.
      */
     private void resetInvalidState() {
         invalidTargetRow = -1;
@@ -347,7 +346,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
     
     /**
-     * Markiert einen ungültigen Zug, indem die Zielposition und Ursprungsposition gespeichert
+     * Markiert einen ungueligen Zug, indem die Zielposition und Ausgangsposition gespeichert
      * und das Flag movesBlocked gesetzt wird.
      *
      * @param fromRow Startreihe
@@ -365,8 +364,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
     
     /**
-     * Überschreibt die paintComponent-Methode, um das Schachbrett, die Figuren,
-     * Markierungen für ungültige Züge sowie grafische Pfeile anzuzeigen.
+     * Ueberschreibt die paintComponent-Methode, um das Schachbrett, die Figuren,
+     * Markierungen fuer unguelige Zuege sowie grafische Pfeile anzuzeigen.
      *
      * @param g Graphics-Objekt
      */
@@ -374,14 +373,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
-        // Fülle den Hintergrund in Grautönen
+        // Fuelle den Hintergrund in Grautoenen
         g2.setPaint(new Color(100, 100, 100));
         g2.fillRect(0, 0, getWidth(), getHeight());
-
+        
         // Zeichne das Schachbrett und die Figuren
         chessboard.draw(g2);
-
-        // Falls ein ungültiger Zug markiert wurde, zeichne ein halbtransparentes rotes Feld
+        
+        // Falls ein ungueliger Zug markiert wurde, zeichne ein halbtransparentes rotes Feld
         if (invalidTargetRow != -1 && invalidTargetCol != -1) {
             int squareSize = Chessboard.SQUARE_SIZE;
             int targetX = MARGIN + invalidTargetCol * squareSize;
@@ -389,33 +388,33 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             g2.setColor(new Color(255, 0, 0, 128));
             g2.fillRect(targetX, targetY, squareSize, squareSize);
         }
-
-        // Zeichne einen blauen Pfeil an der ursprünglichen Position der Figur, falls vorhanden
+        
+        // Zeichne einen blauen Pfeil an der urspruenglichen Position der Figur, falls vorhanden
         if (originalRow != -1 && originalCol != -1) {
             int squareSize = Chessboard.SQUARE_SIZE;
             int pieceCenterX = MARGIN + originalCol * squareSize + squareSize / 2;
             int pieceCenterY = MARGIN + originalRow * squareSize + squareSize / 2;
-
+            
             g2.setColor(Color.BLUE);
             Stroke oldStroke = g2.getStroke();
             g2.setStroke(new BasicStroke(3));
-
+            
             int arrowStartY = pieceCenterY - 40;
             g2.drawLine(pieceCenterX, arrowStartY, pieceCenterX, pieceCenterY);
-
+            
             Polygon arrowHead = new Polygon();
             arrowHead.addPoint(pieceCenterX, pieceCenterY);
             arrowHead.addPoint(pieceCenterX - 10, pieceCenterY - 20);
             arrowHead.addPoint(pieceCenterX + 10, pieceCenterY - 20);
             g2.fillPolygon(arrowHead);
-
+            
             g2.setStroke(oldStroke);
         }
     }
     
     /**
      * Exportiert das aktuelle Schachbrett als PNG-Bild.
-     * Dabei wird das Panel in ein BufferedImage gerendert und anschließend als PNG gespeichert.
+     * Dabei wird das Panel in ein BufferedImage gerendert und anschliessend als PNG gespeichert.
      *
      * @param filePath Pfad inklusive Dateinamen, unter dem das Bild gespeichert werden soll.
      */
@@ -440,16 +439,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
     
     /**
-     * KeyListener-Methode: Wird aufgerufen, wenn eine Taste gedrückt wird.
-     * Exportiert das Schachbrett als PNG, wenn die Taste "S" gedrückt wird.
+     * KeyListener-Methode: Wird aufgerufen, wenn eine Taste gedrueckt wird.
+     * Exportiert das Schachbrett als PNG, wenn die Taste "S" gedrueckt wird.
      *
      * @param e Das KeyEvent
      */
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_S) { // Wenn "S" gedrückt wird
+        if (e.getKeyCode() == KeyEvent.VK_S) { // Wenn "S" gedrueckt wird
             // Exportiere das Schachbrett-Bild mit einem fortlaufenden Namen
-            exportToPNG("C:\\Users\\youce\\Desktop\\schachpngs\\schachbrett_" + exportCount + ".png");
+            exportToPNG("./Desktop/schachpngs/schachbrett_" + exportCount + ".png");
             exportCount++;
         }
     }
@@ -459,23 +458,23 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     
     @Override
     public void keyTyped(KeyEvent e) { }
-
+    
     /**
-     * Die run()-Methode des Runnable-Interfaces sorgt dafür, dass das Panel
+     * Die run()-Methode des Runnable-Interfaces sorgt dafuer, dass das Panel
      * etwa 60 Mal pro Sekunde (ca. 60 FPS) neu gezeichnet wird.
      */
     @Override
     public void run() {
         while (gameThread != null) {
             try {
-                Thread.sleep(16); // ca. 60 FPS
+                Thread.sleep(16); 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
             repaint();
         }
     }
-
+    
     /**
      * Startet den Spiel-Thread.
      */
@@ -485,7 +484,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             gameThread.start();
         }
     }
-
+    
     /**
      * Stoppt den Spiel-Thread.
      */

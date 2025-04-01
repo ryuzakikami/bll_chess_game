@@ -1,24 +1,24 @@
 package main.java.bll_chess.piece;
 
 /**
- * Die Klasse Pawn repräsentiert den Bauern im Schach.
- * Ein Bauer bewegt sich primär vorwärts und schlägt diagonal.
- * Zusätzlich gibt es spezielle Regeln wie den Doppelschritt und En Passant.
+ * Die Klasse Pawn repraesentiert den Bauern im Schach.
+ * Ein Bauer bewegt sich primaer vorwaerts und schlaegt diagonal.
+ * Zusaetzlich gibt es spezielle Regeln wie den Doppelschritt und En Passant.
  */
 public class Pawn extends Piece {
     // Flag, ob der Bauer bereits gezogen wurde
     private boolean hasMoved;
-    // Speichert die letzte Zeile, in der sich der Bauer befand (optional, für Animation oder Logik)
+    // Speichert die letzte Zeile, in der sich der Bauer befand (optional, fuer Animation oder Logik)
     private int lastRow;
-    // Bewegungsrichtung: -1 für weiße Bauern (nach oben), +1 für schwarze Bauern (nach unten)
+    // Bewegungsrichtung: -1 fuer weisse Bauern (nach oben), +1 fuer schwarze Bauern (nach unten)
     private final int direction;
-    // Flag, ob der Bauer für En Passant anfällig ist
+    // Flag, ob der Bauer fuer En Passant anfaellig ist
     private boolean enPassantEligible;
 
     /**
-     * Konstruktor für den Bauern.
+     * Konstruktor fuer den Bauern.
      *
-     * @param color Farbe des Bauern (0 = weiß, 1 = schwarz)
+     * @param color Farbe des Bauern (0 = weiss, 1 = schwarz)
      * @param col   Startspalte
      * @param row   Startzeile
      */
@@ -26,15 +26,15 @@ public class Pawn extends Piece {
         super(color, col, row);
         this.hasMoved = false;
         this.lastRow = row;
-        // Weiße Bauern bewegen sich nach oben (-1), schwarze nach unten (+1)
+        // Weisse Bauern bewegen sich nach oben (-1), schwarze nach unten (+1)
         this.direction = (color == 0) ? -1 : 1;
         this.enPassantEligible = false;
     }
     
     /**
-     * Gibt den Pfad zum Bild des Bauern zurück.
+     * Gibt den Pfad zum Bild des Bauern zurueck.
      *
-     * @return String mit dem Bildpfad, abhängig von der Farbe des Bauern
+     * @return String mit dem Bildpfad, abhaengig von der Farbe des Bauern
      */
     @Override
     protected String getImagePath() {
@@ -42,41 +42,41 @@ public class Pawn extends Piece {
     }
 
     /**
-     * Überprüft, ob ein geplanter Zug des Bauern gültig ist.
+     * Ueberprueft, ob ein geplanter Zug des Bauern gueltig ist.
      *
-     * Es werden folgende Züge berücksichtigt:
-     * - Normale Bewegung: Ein Feld vorwärts, wenn das Feld frei ist.
-     * - Doppelschritt: Zwei Felder vorwärts vom Ausgangsplatz, wenn beide Felder frei sind.
-     * - Diagonaler Schlag: Ein Feld diagonal vorwärts, wenn eine gegnerische Figur steht.
+     *
+     * - Normale Bewegung: Ein Feld vorwaerts, wenn das Feld frei ist.
+     * - Doppelschritt: Zwei Felder vorwaerts vom Ausgangsplatz, wenn beide Felder frei sind.
+     * - Diagonaler Schlag: Ein Feld diagonal vorwaerts, wenn eine gegnerische Figur steht.
      * - En Passant: Diagonaler Zug, wenn ein gegnerischer Bauer en passant geschlagen werden kann.
      *
      * @param newCol Zielspalte
      * @param newRow Zielzeile
      * @param board  Das Schachbrett als 2D-Array von Piece-Objekten
-     * @return true, wenn der Zug gültig ist, sonst false
+     * @return true, wenn der Zug gueltig ist, sonst false
      */
     @Override
     public boolean isValidMove(int newCol, int newRow, Piece[][] board) {
-        // Überprüfe, ob die Zielposition innerhalb des Schachbretts liegt
+        // Ueberpruefe, ob die Zielposition innerhalb des Schachbretts liegt
         if (!isWithinBounds(newCol, newRow)) {
             return false;
         }
         
-        // Normale Bewegung: Ein Feld vorwärts in Richtung der Bewegungsrichtung
+        // Normale Bewegung: Ein Feld vorwaerts in Richtung der Bewegungsrichtung
         if (newCol == col && newRow == row + direction) {
             if (board[newRow][newCol] == null) {
                 return true;
             }
         }
         
-        // Doppelschritt vom Startfeld: Zwei Felder vorwärts, falls der Bauer noch nicht gezogen wurde
+        // Doppelschritt vom Startfeld: Zwei Felder vorwaerts, falls der Bauer noch nicht gezogen wurde
         if (newCol == col && newRow == row + 2 * direction && !hasMoved) {
             if (board[row + direction][col] == null && board[newRow][newCol] == null) {
                 return true;
             }
         }
         
-        // Diagonaler Schlag: Ein Feld diagonal vorwärts, wenn auf dem Zielfeld eine gegnerische Figur steht
+        // Diagonaler Schlag: Ein Feld diagonal vorwaerts, wenn auf dem Zielfeld eine gegnerische Figur steht
         if (Math.abs(newCol - col) == 1 && newRow == row + direction) {
             Piece targetPiece = board[newRow][newCol];
             if (targetPiece != null && targetPiece.getColor() != this.color) {
@@ -85,7 +85,7 @@ public class Pawn extends Piece {
         }
         
         // En Passant:
-        // Der Zug erfolgt diagonal vorwärts, auch wenn das Zielfeld leer ist.
+        // Der Zug erfolgt diagonal vorwaerts, auch wenn das Zielfeld leer ist.
         // Voraussetzung ist, dass der gegnerische Bauer neben dem eigenen Bauern steht
         // und gerade einen Doppelschritt gemacht hat.
         if (Math.abs(newCol - col) == 1 && newRow == row + direction) {
@@ -101,7 +101,7 @@ public class Pawn extends Piece {
     }
     
     /**
-     * Überprüft, ob eine gegebene Position innerhalb des Schachbretts liegt.
+     * Ueberprueft, ob eine gegebene Position innerhalb des Schachbretts liegt.
      *
      * @param col Spalte
      * @param row Zeile
@@ -112,25 +112,25 @@ public class Pawn extends Piece {
     }
 
     /**
-     * Liefert den Status, ob der Bauer für En Passant anfällig ist.
+     * Liefert den Status, ob der Bauer fuer En Passant anfaellig ist.
      *
-     * @return true, wenn En Passant möglich ist, sonst false
+     * @return true, wenn En Passant moeglich ist, sonst false
      */
     public boolean isEnPassantEligible() {
         return enPassantEligible;
     }
 
     /**
-     * Setzt, ob der Bauer für En Passant anfällig ist.
+     * Setzt, ob der Bauer fuer En Passant anfaellig ist.
      *
-     * @param eligible true, wenn der Bauer anfällig sein soll, sonst false
+     * @param eligible true, wenn der Bauer anfaellig sein soll, sonst false
      */
     public void setEnPassantEligible(boolean eligible) {
         this.enPassantEligible = eligible;
     }
 
     /**
-     * Gibt zurück, ob der Bauer bereits bewegt wurde.
+     * Gibt zurueck, ob der Bauer bereits bewegt wurde.
      *
      * @return true, wenn der Bauer schon gezogen wurde, sonst false
      */
@@ -148,7 +148,7 @@ public class Pawn extends Piece {
     }
 
     /**
-     * Gibt die letzte Zeile zurück, in der sich der Bauer befand.
+     * Gibt die letzte Zeile zurueck, in der sich der Bauer befand.
      *
      * @return die letzte Zeile als int
      */
@@ -166,8 +166,8 @@ public class Pawn extends Piece {
     }
 
     /**
-     * Gibt die Bewegungsrichtung des Bauern zurück.
-     * Für weiße Bauern ist dies -1 (nach oben), für schwarze +1 (nach unten).
+     * Gibt die Bewegungsrichtung des Bauern zurueck.
+     * Fuer weisse Bauern ist dies -1 (nach oben), fuer schwarze +1 (nach unten).
      *
      * @return Richtung als int (-1 oder +1)
      */

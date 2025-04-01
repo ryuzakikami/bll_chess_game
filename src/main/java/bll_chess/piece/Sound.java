@@ -7,12 +7,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
- * Die Klasse Sound ermöglicht das Abspielen von Soundeffekten im Spiel.
+ * Die Klasse Sound ermoeglicht das Abspielen von Soundeffekten im Spiel.
  */
 public class Sound {
 
     /**
-     * Enum, das die verschiedenen Soundtypen und zugehörige Dateinamen definiert.
+     * Enum, das die verschiedenen Soundtypen und zugehoerige Dateinamen definiert.
      */
     public enum SoundType {
         BLACK_CAPTURES("Black_captures.mp3"),
@@ -35,7 +35,7 @@ public class Sound {
         }
 
         /**
-         * Gibt den Dateinamen des Sounds zurück.
+         * Gibt den Dateinamen des Sounds zurueck.
          * 
          * @return Dateiname als String
          */
@@ -55,7 +55,7 @@ public class Sound {
         String filePath = "src/main/resources/sounds/" + soundType.getFilename();
         
         try {
-            // Öffne einen gepufferten InputStream zur Sounddatei
+            // Oeffne einen gepufferten InputStream zur Sounddatei
             BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filePath));
             AdvancedPlayer player = new AdvancedPlayer(bis);
             
@@ -67,7 +67,7 @@ public class Sound {
                     e.printStackTrace();
                 } finally {
                     try {
-                        bis.close();  // Schließe den Stream, wenn der Sound abgespielt wurde
+                        bis.close();  // Schliesse den Stream, wenn der Sound abgespielt wurde
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

@@ -1,8 +1,8 @@
 package main.java.bll_chess.piece;
 
 /**
- * Die Klasse Rook repräsentiert den Turm im Schach.
- * Ein Turm bewegt sich horizontal oder vertikal über das Brett.
+ * Die Klasse Rook repraesentiert den Turm im Schach.
+ * Ein Turm bewegt sich horizontal oder vertikal ueber das Brett.
  */
 public class Rook extends Piece {
     private boolean hasMoved = false;
@@ -13,7 +13,7 @@ public class Rook extends Piece {
 
     @Override
     public boolean isValidMove(int newCol, int newRow, Piece[][] board) {
-        // 1. Prüfe Brettgrenzen
+        // 1. Pruefe Brettgrenzen
         if (newCol < 0 || newCol >= 8 || newRow < 0 || newRow >= 8) {
             return false;
         }
@@ -25,7 +25,7 @@ public class Rook extends Piece {
         int colStep = Integer.compare(newCol, col);
         int rowStep = Integer.compare(newRow, row);
 
-        // 4. Prüfe alle Felder zwischen Start und Ziel
+        // 4. Pruefe alle Felder zwischen Start und Ziel
         int currentCol = col + colStep;
         int currentRow = row + rowStep;
         while (currentCol != newCol || currentRow != newRow) {
@@ -46,14 +46,14 @@ public class Rook extends Piece {
 
     // --- Rochade-Logik ---
     public boolean canCastle(Piece[][] board, int kingCol, int kingRow) {
-        // 1. Turm unbenutzt und gleiche Reihe wie König
+        // 1. Turm unbenutzt und gleiche Reihe wie Koenig
         if (hasMoved || row != kingRow) return false;
         
         // 2. Bestimme Richtung (links/rechts)
         int step = Integer.compare(kingCol, col);
         int currentCol = col + step;
         
-        // 3. Prüfe freie Felder zwischen Turm und König
+        // 3. Pruefe freie Felder zwischen Turm und Koenig
         while (currentCol != kingCol) {
             if (board[kingRow][currentCol] != null) return false;
             currentCol += step;
