@@ -18,8 +18,8 @@ public class Chessboard implements Serializable {
     // Das Schachbrett als 2D-Array von Figuren.
     // board[0] entspricht der untersten Zeile (visuelle Reihe 1) und board[7] der obersten (visuelle Reihe 8).
     private Piece[][] board;
-    // Aktueller Spieler (0 = Weiss, 1 = Schwarz)
-    private int currentPlayer = 0;
+    // Aktueller Spieler (1 = Weiss, 0 = Schwarz)
+    private int currentPlayer = 1;
     // Flag, ob der aktuelle Spieler im Schach steht
     private boolean isCheck = false;
     // Historie der Zuege fuer Rueckgaengig-Funktionalitaet
@@ -383,9 +383,9 @@ public class Chessboard implements Serializable {
      * Wechselt den aktuellen Spieler.
      */
     public void switchPlayer() {
-        currentPlayer = (currentPlayer == 0) ? 1 : 0;
+        currentPlayer = (currentPlayer == 1) ? 0 : 1;
         System.out.println("[DEBUG] Spieler gewechselt -> Neuer Spieler: " 
-            + (currentPlayer == 0 ? "Weiss" : "Schwarz"));
+            + (currentPlayer == 1 ? "Weiss" : "Schwarz"));
     }
     
     /**
@@ -596,4 +596,9 @@ public class Chessboard implements Serializable {
             g2.drawString(label, xLeft, y);
         }
     }
+    // In Chessboard.java
+    public void setCurrentPlayer(int player) {
+    this.currentPlayer = player;
+}
+
 }

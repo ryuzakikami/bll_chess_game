@@ -8,36 +8,69 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.regex.*;
 
 public class ArduinoConnector {
     private SerialPort serialPort;
     private BufferedReader input;
     private GamePanel gamePanel;
     private StringBuilder dataBuffer = new StringBuilder();
-    private static final long TIMEOUT = 5000; //5000ms = 5s Timeout
-    
-    public ArduinoConnector(String portName, GamePanel gamePanel) {
+
+    public ArduinoConnector(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
+
+        // Starte ein Hintergrund‐Thread, damit die GUI sofort angezeigt werden kann:
+        new Thread(this::initializeSerialConnection).start();
+    }
+
+    private void initializeSerialConnection() {
+        String portName = "";
+
         try {
-            // Verfuegbare serielle Ports suchen und oeffnen
+            // 1) Verfügbare serielle Ports ermitteln
             SerialPort[] ports = SerialPort.getCommPorts();
-            System.out.println("Verfuegbare Ports: " + Arrays.toString(ports));
-            
+            System.out.println("Verfügbare Ports: " + Arrays.toString(ports));
+
+            // 2) Nach "Arduino Mega 2560" suchen und COM-Namen extrahieren
+            for (SerialPort port : ports) {
+                String portStr = port.toString();
+                System.out.println(portStr);
+                if (portStr.contains("Arduino Mega 2560")) {
+                    Pattern p = Pattern.compile("\\(([^)]+)\\)$");
+                    Matcher m = p.matcher(portStr);
+                    if (m.find()) {
+                        portName = m.group(1); // z.B. "COM3"
+                        System.out.println("Gefundener COM-Port: " + portName);
+                        break;
+                    }
+                }
+            }
+
+            // 3) Abbruch, falls kein Arduino Mega gefunden wurde
+            if (portName.isEmpty()) {
+                System.out.println("Kein Arduino Mega 2560 gefunden.");
+                return;
+            }
+
+            // 4) Seriellen Port öffnen
             serialPort = SerialPort.getCommPort(portName);
             serialPort.setBaudRate(115200);
             serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 1000, 0);
-            
-            boolean opened = serialPort.openPort();
-            if (!opened) {
-                System.err.println("Fehler beim Oeffnen des Ports " + portName);
+
+            if (serialPort.openPort()) {
+                System.out.println("Erfolgreich verbunden mit " + portName);
+               
+            }
+            else{
+                 System.err.println("Fehler beim Öffnen des Ports " + portName);
                 return;
             }
-            System.out.println("Erfolgreich verbunden mit " + portName);
-            
-            // Eingabestream initialisieren
+           
+
+            // 5) Input-Stream initialisieren
             input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
-            
-            // Daten-Listener hinzufuegen
+
+            // 6) Listener hinzufügen
             serialPort.addDataListener(new SerialPortDataListener() {
                 @Override
                 public int getListeningEvents() {
@@ -48,81 +81,61 @@ public class ArduinoConnector {
                 public void serialEvent(SerialPortEvent event) {
                     if (event.getEventType() == SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {
                         try {
-                            // Verfuegbare Daten lesen
                             String line = input.readLine();
-                            if (line == null) {
-                                return;
-                            }
-                            
+                            if (line == null) return;
+
                             System.out.println("Daten empfangen: " + line);
-                            
-                            // Daten zum Puffer hinzufuegen und auf vollstaendige Nachricht pruefen
                             dataBuffer.append(line);
-                            
-                            // Falls der Puffer eine vollstaendige Nachricht enthaelt (mit START- und END-Markern)
-                            if (dataBuffer.indexOf("START,") >= 0 && dataBuffer.indexOf(",END") >= 0) {
-                                int startIndex = dataBuffer.indexOf("START,");
-                                int endIndex = dataBuffer.indexOf(",END") + 4; 
-                                
-                                if (startIndex >= 0 && endIndex > startIndex) {
-                                    String completeMessage = dataBuffer.substring(startIndex, endIndex);
-                                    processCompleteSensorData(completeMessage);
-                                    
-                                    // Verarbeiteten Teil aus dem Puffer entfernen
-                                    dataBuffer.delete(0, endIndex);
-                                }
+
+                            int startIndex = dataBuffer.indexOf("START,");
+                            int endIndex   = dataBuffer.indexOf(",END");
+                            if (startIndex >= 0 && endIndex >= 0 && endIndex > startIndex) {
+                                String completeMessage = dataBuffer.substring(startIndex, endIndex + 4);
+                                processCompleteSensorData(completeMessage);
+                                dataBuffer.delete(0, endIndex + 4);
                             }
-                            
-                            // Falls der Puffer zu gross wird, ohne eine gueltige Nachricht zu enthalten, leeren
+
                             if (dataBuffer.length() > 1000) {
-                                System.out.println("Pufferueberlauf, wird geleert");
+                                System.out.println("Pufferüberlauf, wird geleert");
                                 dataBuffer.setLength(0);
                             }
-                            
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
                 }
             });
-            
-            // Sende ein Startsignal an das Arduino, um die Kommunikation zu beginnen
-            sendInitialRequest();
-            
+
+            // 7) READY‐Signal an Arduino senden – nur, wenn der Port noch geöffnet ist:
+            Thread.sleep(2000);
+            if (serialPort.isOpen()) {
+                try (OutputStream output = serialPort.getOutputStream()) {
+                    output.write("READY\n".getBytes());
+                    output.flush();
+                    System.out.println("READY-Signal an Arduino gesendet");
+                } catch (Exception writeEx) {
+                    System.err.println(writeEx.getMessage());
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    
+
     /**
-     * Sendet ein initiales Signal an das Arduino, um Datenanforderung zu starten
-     */
-    private void sendInitialRequest() {
-        try {
-            Thread.sleep(2000); // Dem Arduino Zeit geben, um zu starten
-            OutputStream output = serialPort.getOutputStream();
-            output.write("READY\n".getBytes());
-            output.flush();
-            System.out.println("READY-Signal an Arduino gesendet");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * Verarbeitung einer vollstaendigen Sensordaten-Nachricht
+     * Verarbeitung einer vollständigen Sensordaten‐Nachricht (START,…,END).
      */
     private void processCompleteSensorData(String data) {
         if (data.startsWith("START,") && data.endsWith(",END")) {
-            // Uebergabe der vollstaendigen Nachricht an das GamePanel
             gamePanel.processSensorData(data);
         } else {
             System.out.println("Unerwartetes Datenformat: " + data);
         }
     }
-    
+
     /**
-     * Schliesst die serielle Verbindung
+     * Schließt die serielle Verbindung wieder.
      */
     public void close() {
         if (serialPort != null && serialPort.isOpen()) {
