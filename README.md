@@ -14,7 +14,7 @@ In diesem Projekt habe ich ein intelligentes Schachbrett gebaut, das analoge Spi
 Unter dem Schachbrett sitzt eine selbst gebaute Sensormatrix aus 64 Hallsensoren. In den Böden der Schachfiguren stecken kleine Magnete. Sobald eine Figur bewegt wird, erkennt der Sensor darunter die Änderung. Ein Arduino Mega 2560 liest die Sensoren über vier Multiplexer aus und schickt die Züge an eine Java-Anwendung (GUI). Die Anwendung zeigt das Spielfeld am PC an, prüft die Züge auf Regelkonformität..
 
 > 📄 **Hinweis zur Hausarbeit:**  
-> Da das Projekt im Rahmen meiner BLL entstanden ist, habe ich den genauen Aufbau, die Schaltpläne, die Software-Logik und alle Tests ausführlich in meiner schriftlichen Hausarbeit dokumentiert[cite: 3]. Die PDF dazu findest du im Ordner [`docs/HausarbeitBLL/`](./docs/HausarbeitBLL/).
+> Da das Projekt im Rahmen meiner BLL entstanden ist, habe ich den genauen Aufbau, die Schaltpläne, die Software-Logik und alle Tests ausführlich in meiner schriftlichen Hausarbeit dokumentiert. Die PDF dazu findest du im Ordner [`docs/HausarbeitBLL/`](./docs/HausarbeitBLL/).
 
 ---
 
