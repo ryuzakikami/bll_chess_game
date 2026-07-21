@@ -20,7 +20,7 @@ Unter dem Schachbrett sitzt eine selbst gebaute Sensormatrix aus 64 Hallsensoren
 
 ## 📂 Repository-Überblick
 
-Hier eine kurze Übersicht, wo was im Projekt liegt:
+Hier eine kurze Übersicht, wo was im Projekt liegt :
 
 * **[`docs/HausarbeitBLL/`](./docs/HausarbeitBLL/)**: Die komplette schriftliche Ausarbeitung als PDF (sowie LaTeX-Quellcode und Bilder)[cite: 3]. **Hier wird alles im Detail erklärt!**[cite: 3]
 * **[`docs/schachbrett_model/`](./docs/schachbrett_model/)**: Die 3D-Druck-Dateien (`.stl` und `.step`) für das Schachbrett und die Figuren[cite: 3].
