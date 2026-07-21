@@ -1,0 +1,19 @@
+\babel@toc {ngerman}{}\relax 
+\contentsline {figure}{\numberline {1}{\ignorespaces Grundstellung des Schachspiels. (eigens erstellte Abbildung)}}{6}{}%
+\contentsline {figure}{\numberline {2}{\ignorespaces Der weiße Bauer zieht von d2 nach d3 und zieht beim erste Zug des Bauern von d2 nach d4. (eigens erstellte Abbildung)}}{7}{}%
+\contentsline {figure}{\numberline {3}{\ignorespaces Der weiße Springer zieht von b1 nach c3. (eigens erstellte Abbildung)}}{7}{}%
+\contentsline {figure}{\numberline {4}{\ignorespaces Der weiße Läufer zieht von f1 nach d3. (eigens erstellte Abbildung)}}{8}{}%
+\contentsline {figure}{\numberline {5}{\ignorespaces Der schwarze Turm zieht von h8 nach h5. (eigens erstellte Abbildung)}}{8}{}%
+\contentsline {figure}{\numberline {6}{\ignorespaces Die weiße Dame, zieht von d1 nach f3 und weiße Dame, zieht von f3 nach f5. (eigens erstellte Abbildung)}}{9}{}%
+\contentsline {figure}{\numberline {7}{\ignorespaces Lange und kurze Rochade (eigens erstellte Abbildung)}}{9}{}%
+\contentsline {figure}{\numberline {8}{\ignorespaces der weiße Bauer schlägt Schwarz auf Diagonal auf d5. (eigens erstellte Abbildung)}}{10}{}%
+\contentsline {figure}{\numberline {9}{\ignorespaces Beispielstellung für En Passant: Der weiße Bauer schlägt den schwarzen Bauern auf c5 im Vorübergehen. (eigens erstellte Abbildung)}}{10}{}%
+\contentsline {figure}{\numberline {10}{\ignorespaces Übersicht der Arduino Mega-Platine mit den wichtigsten Anschlüssen \blx@tocontentsinit {0}\cite {Arduino_Mega}.}}{11}{}%
+\contentsline {figure}{\numberline {11}{\ignorespaces Schematische Darstellung eines digitalen unipolaren Hallsensors. Quelle: \blx@tocontentsinit {0}\cite {Hallsensoren_Arduino_projekt}}}{12}{}%
+\contentsline {figure}{\numberline {12}{\ignorespaces Adresstabelle des 16:1-Multiplexers. Die vier Adressbits (\(S_3\) bis \(S_0\)) bestimmen den aktiven Kanal \(C_0\) bis \(C_{15}\), \blx@tocontentsinit {0}\cite {Mux_tablle}}}{12}{}%
+\contentsline {figure}{\numberline {13}{\ignorespaces Schaltplan des 16:1-Multiplexers CD74HC406, \blx@tocontentsinit {0}\cite {Analog_Digital_MUX}}}{13}{}%
+\contentsline {figure}{\numberline {14}{\ignorespaces Ein herkömmlichen Holzschachbrett, das als Basis für die Schnittstellenentwicklung gewählt wurde.}}{13}{}%
+\contentsline {figure}{\numberline {15}{\ignorespaces 3D-Modelle der Schachfiguren mit angepasster Befestigung für Magneten \blx@tocontentsinit {0}\cite {3D_Figuren}}}{14}{}%
+\contentsline {figure}{\numberline {16}{\ignorespaces UML-Diagramm der Softwarearchitektur}}{16}{}%
+\contentsline {figure}{\numberline {17}{\ignorespaces Vollendete Hallsensoren-Matrix}}{18}{}%
+\contentsline {figure}{\numberline {18}{\ignorespaces Vollendeter Prototyp der Schnittstelle}}{18}{}%
